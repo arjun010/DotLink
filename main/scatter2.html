@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <title>DotLink</title>
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    
+    <script type="text/javascript">
+      var view =2;
+    </script>
+    
+    <script type="text/javascript" src="js/d3/d3.js"></script>
+    
+
+    <style type="text/css">
+html,body,.container
+{
+    height:100%;
+}
+.row
+{
+    height: 100%;
+}
+
+/*pathView start*/
+
+.link {
+    stroke: slategray;
+    fill: none;
+    stroke-opacity: 1.0;
+}
+
+.node text {
+  pointer-events: none;
+  font: 10px sans-serif;
+}
+/*pathView end*/
+/* scatternet start*/
+.name {
+    float:right;
+    color:#27aae1;
+}
+.x_axis {
+    fill: none;
+    stroke: #AAA;
+    stroke-width: 1px;
+}
+.y_axis {
+    fill: none;
+    stroke: #AAA;
+    stroke-width: 1px;
+}
+
+.label {
+    fill: #414241;
+}
+.node {
+    cursor:pointer;
+}
+.dot {
+    opacity: .7;
+    cursor: pointer;
+}
+/* scatternet end*/
+</style>
+    <!-- Custom styles for this template -->
+
+    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+   <!-- <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="css/demo.css" />
+    <link rel="stylesheet" type="text/css" href="css/icons.css" />
+    <link rel="stylesheet" type="text/css" href="css/component.css" />
+    <script src="js/modernizr.custom.js"></script>-->
+
+ 
+    <link rel="stylesheet" type="text/css" href="font-awesome/css/font-awesome.min.css">
+
+    <link rel="stylesheet" type="text/css" href="ionicons/css/ionicons.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" type="text/css" href="foundation-icons/foundation-icons.css">
+    <script src="script.js"></script>
+  </head>
+
+  <body>
+     
+<div class="col-sm-2 cssmenu hide" id="mainmenu" style="height:100%;width=100%; background-color:#444444;">
+  <ul>
+   <li class='active'><a href='#'><span class="fa fa-times menuClose" style="font-size:20px;">Main Menu</span></a></li>
+   <li class='has-sub' id="dataPanelShow" style="width:100%;"><a href='#'><span class="fa fa-cloud" >&nbsp;&nbsp;&nbsp;Data</span></a>
+   </li>
+   <li class='has-sub' id="filterPanelShow" style="width:100%;"><a href='#'><span class="fa fa-filter" >&nbsp;&nbsp;&nbsp;Filter</span></a>
+   </li>
+   <li class='has-sub' id="analyticsPanelShow" style="width:100%;"><a href='#'><span class="fi-graph-bar" >&nbsp;&nbsp;&nbsp;Analytics</span></li>
+   <li class='has-sub' id="projectPanelShow" style="width:100%;"><a href='#'><span class="fa fa-archive" >&nbsp;&nbsp;&nbsp;Project</span></li>
+   <li class='has-sub' id="preferencesPanelShow" style="width:100%;"><a href='#'><span class="fi-widget">&nbsp;&nbsp;Preferences</span></li>
+</ul>  
+</div>
+
+<!--Data panel starts-->
+<div class="col-sm-2 cssmenu hide" id="dataPanel" style="height:100%;width=100%; background-color:#444444;">
+<ul>
+<li class='active'><a href='#' align="center" ><span class="fa fa-times menuClose" style="font-size:20px;">Data Menu</span></a></li>
+   <li class="backToMenu"><a href='#'><span>back</span></a>
+   <li class='can-sub'><a href='#'><span>Segments</span></a>
+   <ul>
+     <li>
+       <select size="15" style="width:100%;" id="segments">
+            <option>Item 1</option>
+            <option>Item 2</option>
+            <option>Item 3</option>
+            <option>Item 4</option>
+            <option>Item 5</option>
+            <option>Item 6</option>
+            <option>Item 7</option>
+            <option>Item 8</option>
+            <option>Item 9</option>
+            <option>Item 10</option>
+            <option>Item 11</option>
+            <option>Item 12</option>
+            <option>Item 13</option>
+            <option>Item 14</option>
+            <option>Item 15</option>
+          </select>
+     </li>
+   </ul>
+   </li>
+   <li class='can-sub'><a href='#'><span>Companies</span></a>
+   <ul>
+     <li>
+       <select size="15" style="width:100%;" id="newCompany" ondblclick="companySelected()">
+          </select>
+     </li>
+   </ul>
+   </li>
+   <li class='can-sub'><a href='#'><span>Locations</span></a>
+   <ul>
+     <li>
+       <select size="15" style="width:100%;">
+            <option>Item 1
+            <option>Item 2
+            <option>Item 3
+            <option>Item 4
+            <option>Item 5
+            <option>Item 6
+            <option>Item 7
+            <option>Item 8
+            <option>Item 9
+            <option>Item 10
+            <option>Item 11
+            <option>Item 12
+            <option>Item 13
+            <option>Item 14
+            <option>Item 15
+          </select>
+     </li>
+   </ul>
+   </li>
+</ul>
+</div><!--end of dataPanel-->
+        
+<!--Filter panel starts-->
+<div class="col-sm-2 cssmenu hide" id="filterPanel" style="height:100%;width=100%; background-color:#444444;">
+<ul>
+  <li class='active'><a href='#' align="center"><span class="fa fa-times menuClose" style="font-size:20px;">Filter Menu</span></a></li>
+  <li class="backToMenu"><a href='#'><span>back</span></a>
+  <li class='can-sub'><a href='#'><span>Segments</span></a>
+    <ul>
+     <li>
+       <select size="3" style="width:100%;" id="segments">
+            <option>Item 1</option>
+            <option>Item 2</option>
+            <option>Item 3</option>
+       </select>
+     </li>
+   </ul>
+  </li>
+  <li class='can-sub'><a href='#'><span>Companies</span></a>
+  <ul>
+     <li>
+       <select size="3" style="width:100%;" id="segments">
+            <option>Item 1</option>
+            <option>Item 2</option>
+            <option>Item 3</option>
+       </select>
+     </li>
+   </ul>
+  </li>
+  <li class='can-sub'><a href='#'><span>Locations</span></a>
+  <ul>
+     <li>
+       <select size="3" style="width:100%;" id="segments">
+            <option>Item 1</option>
+            <option>Item 2</option>
+            <option>Item 3</option>
+       </select>
+     </li>
+   </ul>
+  </li>
+</ul>
+</div><!--end of filterPanel-->        
+
+
+<!--analyticsPanel starts-->
+<div class="col-sm-2 cssmenu hide" id="analyticsPanel" style="height:100%;width=100%; background-color:#444444;">
+<ul>
+  <li class='active'><a align="center" href='#'><span class="fa fa-times menuClose" style="font-size:20px;">Analytics Menu</span></a></li>
+  <li class="backToMenu"><a href='#'><span>back</span></a>
+  <li class='can-sub'><a href='#'><span>Segments</span></a>
+    <ul>
+     <li>
+       <select size="3" style="width:100%;" id="segments">
+            <option>Item 1</option>
+            <option>Item 2</option>
+            <option>Item 3</option>
+       </select>
+     </li>
+   </ul>
+  </li>
+  <li class='can-sub'><a href='#'><span>Companies</span></a>
+  <ul>
+     <li>
+       <select size="3" style="width:100%;" id="segments">
+            <option>Item 1</option>
+            <option>Item 2</option>
+            <option>Item 3</option>
+       </select>
+     </li>
+   </ul>
+  </li>
+  <li class='can-sub'><a href='#'><span>Locations</span></a>
+  <ul>
+     <li>
+       <select size="3" style="width:100%;" id="segments">
+            <option>Item 1</option>
+            <option>Item 2</option>
+            <option>Item 3</option>
+       </select>
+     </li>
+   </ul>
+  </li>
+</ul>
+</div><!--end of analyticsPanel--> 
+</div>
+        
+    <div id="mainContent" class="col-sm-12" style="height:100%;">
+        <div id="togglePanelContent"><span id="menuShow" class="glyphicon glyphicon-list" style="font-size:24px ;"></span>&nbsp;&nbsp;&nbsp;&nbsp;Y-axis<select id="yAxis" onchange="showScatterPlot()">
+          <option value="">--</option>
+          <option value="highPrice">High Price</option>
+          <option value="allianceCount">Alliance Count</option>
+          <option value="companySize">Company Size</option>
+        </select>
+        <!--<span id="menuHide" class="glyphicon glyphicon-list hide" style="font-size:24px ;"></span>--><p align="left"></p>
+        </div>
+        <!--<h1 align="right">Viz</h1>-->
+        <div id="viz" style="width:100%;height:90%;">
+        </div>
+        <p align="center">X-axis<select id="xAxis" onchange="showScatterPlot()">
+          <option value="">--</option>
+          <option value="highPrice">High Price</option>
+          <option value="allianceCount">Alliance Count</option>
+          <option value="companySize">Company Size</option>
+        </select></p>
+        
+        <div id="vizTabs" style="">
+        <ul class="nav nav-pills">
+            <li><a href="index.html">Path View</a></li>
+            <li class="active"><a data-toggle="pill" href="#">ScatterNet</a></li>
+            <li><a >Segment View</a></li>
+        </ul>
+        </div>
+    </div><!--end of mainContent -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="js/classie.js"></script>
+    <script src="js/mlpushmenu.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+  var companies = (function() {
+        var json = null;
+        $.ajax({
+            'async': false,
+            'global': false,
+            'url': "data/companies.json",
+            'dataType': "json",
+            'success': function (data) {
+                json = data;
+            }
+        });
+        return json;
+    })();
+for(var i=0;i<companies.length;i++){
+  //.replace(/\s/g, " ")
+    $("#newCompany").append('<option value='+"\""+companies[i]['name'] +"\""+'>' + companies[i]['name'] + '</option>');
+}
+})
+$('#panel1').click(function (e) {
+    $("#accordion1").removeClass("hide"); 
+    
+    $("#accordion2").addClass("hide"); 
+    $("#accordion3").addClass("hide"); 
+    $("#accordion4").addClass("hide"); 
+    
+})
+$('#panel2').click(function (e) {
+    $("#accordion2").removeClass("hide"); 
+
+    $("#accordion1").addClass("hide"); 
+    $("#accordion3").addClass("hide"); 
+    $("#accordion4").addClass("hide"); 
+    
+})
+$('#panel3').click(function (e) {
+    $("#accordion3").removeClass("hide"); 
+
+    $("#accordion1").addClass("hide"); 
+    $("#accordion2").addClass("hide"); 
+    $("#accordion4").addClass("hide"); 
+    
+})
+$('#panel4').click(function (e) {
+    $("#accordion4").removeClass("hide"); 
+
+    $("#accordion1").addClass("hide"); 
+    $("#accordion2").addClass("hide"); 
+    $("#accordion3").addClass("hide"); 
+    
+})
+
+
+
+$('#menuShow').click(function (e) {
+    //$("#panelContent").addClass("hide");
+    //$("#panelContent").hide();
+    
+    $("#mainmenu").removeClass("hide");
+
+    $("#mainContent").removeClass("col-sm-12");
+    $("#mainContent").addClass("col-sm-10");
+
+
+    //$("#menuHide").removeClass("hide");
+    $("#menuShow").addClass("hide");
+})
+/*
+$('#menuHide').click(function (e) {
+    //$("#panelContent").removeClass("hide");
+    //$("#panelContent").show();
+  $("#mainmenu").addClass("hide");  
+  
+  
+
+    $("#dataPanel").addClass("hide");
+    $("#filterPanel").addClass("hide");
+    $("#analyticsPanel").addClass("hide");
+    
+
+    $("#mainContent").removeClass("col-sm-9");
+    $("#mainContent").removeClass("col-sm-10");
+    $("#mainContent").addClass("col-sm-12");
+    
+    $("#menuShow").removeClass("hide");
+    $("#menuHide").addClass("hide");
+})
+*/
+
+$("#dataPanelShow").click(function (e) {
+    //$("#panelContent").removeClass("hide");
+    //$("#panelContent").show();
+
+    $("#dataPanel").removeClass("hide");
+    $("#mainmenu").addClass("hide");
+    
+    //$("#mainContent").removeClass("col-sm-9");
+    //$("#mainContent").addClass("col-sm-12");
+})
+$("#filterPanelShow").click(function (e) {
+    //$("#panelContent").removeClass("hide");
+    //$("#panelContent").show();
+
+    $("#filterPanel").removeClass("hide");
+    $("#mainmenu").addClass("hide");
+    
+    //$("#mainContent").removeClass("col-sm-11");
+    //$("#mainContent").addClass("col-sm-10");
+})
+$("#analyticsPanelShow").click(function (e) {
+    //$("#panelContent").removeClass("hide");
+    //$("#panelContent").show();
+
+    $("#analyticsPanel").removeClass("hide");
+    $("#mainmenu").addClass("hide");
+    
+    //$("#mainContent").removeClass("col-sm-11");
+    //$("#mainContent").addClass("col-sm-10");
+})
+
+$(".backToMenu").click(function (e) {
+    //$("#panelContent").removeClass("hide");
+    //$("#panelContent").show();
+    $("#dataPanel").addClass("hide");
+    $("#filterPanel").addClass("hide");
+    $("#analyticsPanel").addClass("hide");
+    $("#mainmenu").removeClass("hide");
+})
+$(".menuClose").click(function (e) {
+    //$("#panelContent").removeClass("hide");
+    //$("#panelContent").show();
+    $("#dataPanel").addClass("hide");
+    $("#filterPanel").addClass("hide");
+    $("#analyticsPanel").addClass("hide");
+    $("#mainmenu").addClass("hide");
+    $("#menuShow").removeClass("hide");
+    $("#mainContent").removeClass("col-sm-10");
+    $("#mainContent").addClass("col-sm-12");
+})
+
+function companySelected(){
+  if(view==1){
+    addNewNode();
+  }else if(view==2){
+    addNewCompanyToScatterNet();
+  }
+}
+</script>
+<script type="text/javascript" src="js/scatternet_test.js"></script>
+</body>
+</html>
