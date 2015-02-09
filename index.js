@@ -170,6 +170,9 @@ app.get('/js/new.js', function(request, response) {
   response.sendfile('main/js/new.js')
 })
 
+app.get('/js/new1.js', function(request, response) {
+  response.sendfile('main/js/new1.js')
+})
 
 app.get('/new.html', function(request, response) {
   response.sendfile('main/new.html')
