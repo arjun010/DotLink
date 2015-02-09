@@ -294,7 +294,7 @@ function mouseover(d) {
 // call the method below to draw scatterNet
 
 function showScatterPlot() {
-
+    console.log(scatterNetLinks);
     updateNetworkInfo();
     d3.select("svg")
       .remove();

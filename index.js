@@ -5,10 +5,6 @@ app.set('port', (process.env.PORT || 5000))
 app.use(express.static(__dirname + '/public'))
 
 app.get('/', function(request, response) {
-  response.sendfile('main/test2.html')
-})
-
-app.get('/index.html', function(request, response) {
   response.sendfile('main/index.html')
 })
 
@@ -40,6 +36,11 @@ app.get('/js/bootstrap.js', function(request, response) {
   response.sendfile('main/js/bootstrap.js')
 })
 
+app.get('js/d3tooltip.js', function(request, response) {
+  response.sendfile('main/js/d3tooltip.js')
+})
+
+
 app.get('/js/bootstrap.min.js', function(request, response) {
   response.sendfile('main/js/bootstrap.min.js')
 })
@@ -50,6 +51,14 @@ app.get('/js/pathView.js', function(request, response) {
 
 app.get('/data/alliances.json', function(request, response) {
   response.sendfile('main/data/alliances.json')
+})
+
+app.get('/data/detailedAlliances.json', function(request, response) {
+  response.sendfile('main/data/detailedAlliances.json')
+})
+
+app.get('/data/allianceCountBetweenCompanies.json', function(request, response) {
+  response.sendfile('main/data/allianceCountBetweenCompanies.json')
 })
 
 app.get('/js/d3/d3.js', function(request, response) {
@@ -67,6 +76,10 @@ app.get('/scatter.html', function(request, response) {
 
 app.get('/data/companies.json', function(request, response) {
   response.sendfile('main/data/companies.json')
+})
+
+app.get('/data/companies_old.json', function(request, response) {
+  response.sendfile('main/data/companies_old.json')
 })
 
 app.get('/font-awesome/css/font-awesome.min.css', function(request, response) {
@@ -153,6 +166,11 @@ app.get('/scatter2.html', function(request, response) {
   response.sendfile('main/scatter2.html')
 })
 
+app.get('/js/new.js', function(request, response) {
+  response.sendfile('main/js/new.js')
+})
+
+
 app.get('/new.html', function(request, response) {
   response.sendfile('main/new.html')
 })
@@ -167,6 +185,11 @@ app.get('/js/jquery.js', function(request, response) {
 
 app.get('/js/jquery-ui.min.js', function(request, response) {
   response.sendfile('main/js/jquery-ui.min.js')
+})
+
+
+app.get('/js/jquery-1.11.2.min.js', function(request, response) {
+  response.sendfile('main/js/jquery-1.11.2.min.js')
 })
 
 app.listen(app.get('port'), function() {

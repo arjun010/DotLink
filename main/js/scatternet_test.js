@@ -2,40 +2,72 @@
 function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-var scatterNetData = [];
-var scatterNetLinks = [];
+/*
+var globalNodes = globalNodes;
+var globalLinks = globalLinks;
+*/
+//globalNodes.push({"name":"","highPrice":0,"allianceCount":0,"expanded":"false"});
+////console.log(globalAllCompanies);
 
-var companies = (function() {
-        var json = null;
-        $.ajax({
-            'async': false,
-            'global': false,
-            'url': "data/companies.json",
-            'dataType': "json",
-            'success': function (data) {
-                json = data;
+
+function searchNode() {
+    //find the node
+    //console.log("here");
+    var selectedVal = document.getElementById('search').value;
+    var allNodesOnScreen ;
+    console.log(selectedVal);
+    if (selectedVal=="") {
+      allNodesOnScreen = d3.selectAll(".dot")
+        .each(function(d) {
+           d3.select(this).attr("fill",function(d){
+              if(d.expanded=="true"){
+                return "#4747D1";
+            }else{
+                return "#77777E";
             }
-        });
-        return json;
-    })();
-var alliances = (function() {
-        var json = null;
-        $.ajax({
-            'async': false,
-            'global': false,
-            'url': "data/alliances.json",
-            'dataType': "json",
-            'success': function (data) {
-                json = data;
+       
+            });
+    });
+    }
+    else{
+    var selectedNode;
+    allNodesOnScreen = d3.selectAll(".dot")
+    .each(function(d) {
+      if(d.name!="" && d.name.toLowerCase().indexOf(selectedVal) > -1)
+      {
+        d3.select(this).attr("fill","red");
+      }
+      else{
+          d3.select(this).attr("fill",function(d){
+           if(d.expanded=="true"){
+                return "#4747D1";
+            }else{
+                return "#77777E";
             }
-        });
-        return json;
-    })();
-//scatterNetData.push({"name":"","highPrice":0,"allianceCount":0,"expanded":"false"});
-////console.log(companies);
+            });
+      }
+    });
+    }
+    
+}
+
+function showCompanyInfo(forCompany){
+  for(var i=0;i<globalAllCompanies.length;i++){
+    if(forCompany==globalAllCompanies[i]['name']){
+      $("#companyName").text(forCompany);
+      $("#companyAllianceCount").text(globalAllCompanies[i]['allianceCount']);
+    }
+  }
+}
+
+function updateNetworkInfo(){
+  $("#networknodecount").text(globalNodes.length);
+  $("#networkalliancecount").text(globalLinks.length);
+}
+
 function isReversedLink(curLink){
-    for (var i =0; i<scatterNetLinks.length;i++){
-        if(curLink['source']==scatterNetLinks[i]['target'] && curLink['target']==scatterNetLinks[i]['source']){
+    for (var i =0; i<globalLinks.length;i++){
+        if(curLink['source']==globalLinks[i]['target'] && curLink['target']==globalLinks[i]['source']){
             return 1;
         }
     }
@@ -44,19 +76,19 @@ function isReversedLink(curLink){
 
 function getPartners(forCompany){
   var partners = [];
-  for (var i =0 ;i<alliances.length; i++){
-    if(alliances[i]['company1']==forCompany){
-      partners.push(alliances[i]['company2']);
-    }else if(alliances[i]['company2']==forCompany){
-      partners.push(alliances[i]['company1']);
+  for (var i =0 ;i<globalAllAlliances.length; i++){
+    if(globalAllAlliances[i]['company1']==forCompany){
+      partners.push(globalAllAlliances[i]['company2']);
+    }else if(globalAllAlliances[i]['company2']==forCompany){
+      partners.push(globalAllAlliances[i]['company1']);
     }
   }
   return partners;
 }
 
 function companyExistsInNodes(companyName){
-    for(var i=0 ; i<scatterNetData.length;i++){
-        if(companyName==scatterNetData[i]['name']){
+    for(var i=0 ; i<globalNodes.length;i++){
+        if(companyName==globalNodes[i]['name']){
             ////console.log("found")
             return i;
             break;
@@ -66,9 +98,9 @@ function companyExistsInNodes(companyName){
 }
 
 function isExpanded(forCompany){
-  for(var i =0; i<scatterNetData.length; i++){
-    if(scatterNetData[i]['name']==forCompany){
-      if(scatterNetData[i]['expanded']=="true"){
+  for(var i =0; i<globalNodes.length; i++){
+    if(globalNodes[i]['name']==forCompany){
+      if(globalNodes[i]['expanded']=="true"){
         return 1;
       }
     }
@@ -78,12 +110,12 @@ function isExpanded(forCompany){
 
 
 function addNewCompanyToScatterNet(){
-    ////console.log(companies);
+    ////console.log(globalAllCompanies);
     var companyToAdd = document.getElementById("newCompany").value;
-    for(var i =0; i<companies.length;i++){
-        if(companies[i]['name']==companyToAdd){
+    for(var i =0; i<globalAllCompanies.length;i++){
+        if(globalAllCompanies[i]['name']==companyToAdd){
             if(companyExistsInNodes(companyToAdd)==-1){
-                scatterNetData.push({"name":companies[i]['name'],"highPrice":companies[i]['highPrice'],"allianceCount":companies[i]['allianceCount'],"companySize":companies[i]['companySize'],"expanded":"false"});
+                globalNodes.push({"name":globalAllCompanies[i]['name'],"highPrice":globalAllCompanies[i]['highPrice'],"allianceCount":globalAllCompanies[i]['allianceCount'],"companySize":globalAllCompanies[i]['companySize'],"expanded":"false","selected":"false","type":getCompanyType(globalAllCompanies[i]['name']),"sectorColor":getSectorColor(globalAllCompanies[i]['name'])});
             }
         }
     }
@@ -92,30 +124,30 @@ function addNewCompanyToScatterNet(){
     //console.log("partners");
     //console.log(partnerCompanies);
     for(var i=0;i<partnerCompanies.length;i++){
-        for(var j=0; j<scatterNetData.length;j++){
-            //console.log("checking: "+scatterNetData[j]['name']);
-            if(partnerCompanies[i]==scatterNetData[j]['name']){//partner company exists on screen
+        for(var j=0; j<globalNodes.length;j++){
+            //console.log("checking: "+globalNodes[j]['name']);
+            if(partnerCompanies[i]==globalNodes[j]['name']){//partner company exists on screen
                 sourceVal = companyExistsInNodes(companyToAdd);
-                targetVal = companyExistsInNodes(scatterNetData[j]['name']);
+                targetVal = companyExistsInNodes(globalNodes[j]['name']);
                 if(isReversedLink(JSON.parse('{"source":'+sourceVal+',"target":'+targetVal+'}'))==0){
-                    scatterNetLinks.push(JSON.parse('{"source":'+sourceVal+',"target":'+targetVal+'}'));
+                    globalLinks.push(JSON.parse('{"source":'+sourceVal+',"target":'+targetVal+'}'));
                 }
             }
         }
     }
     //console.log("nodes");
-    //console.log(scatterNetData);
+    //console.log(globalNodes);
     //console.log("links");
-    //console.log(scatterNetLinks);
+    //console.log(globalLinks);
     //just to make sure new nodes added are also linked to others on screen
-    for(var i=0;i<scatterNetData.length;i++){
-        for(var j=0;j<scatterNetData.length;j++){
-            for(var k=0;k<alliances.length;k++){
-                if((alliances[k]['company1']==scatterNetData[i]['name'] && alliances[k]['company2']==scatterNetData[j]['name']) || (alliances[k]['company2']==scatterNetData[i]['name'] && alliances[k]['company1']==scatterNetData[j]['name'])){
-                   sourceVal=companyExistsInNodes(scatterNetData[i]['name']);
-                   targetVal=companyExistsInNodes(scatterNetData[j]['name']);
+    for(var i=0;i<globalNodes.length;i++){
+        for(var j=0;j<globalNodes.length;j++){
+            for(var k=0;k<globalAllAlliances.length;k++){
+                if((globalAllAlliances[k]['company1']==globalNodes[i]['name'] && globalAllAlliances[k]['company2']==globalNodes[j]['name']) || (globalAllAlliances[k]['company2']==globalNodes[i]['name'] && globalAllAlliances[k]['company1']==globalNodes[j]['name'])){
+                   sourceVal=companyExistsInNodes(globalNodes[i]['name']);
+                   targetVal=companyExistsInNodes(globalNodes[j]['name']);
                    if(isReversedLink(JSON.parse('{"source":'+sourceVal+',"target":'+targetVal+'}'))==0){
-                        scatterNetLinks.push(JSON.parse('{"source":'+sourceVal+',"target":'+targetVal+'}'));
+                        globalLinks.push(JSON.parse('{"source":'+sourceVal+',"target":'+targetVal+'}'));
                     }
                 }
             }
@@ -124,8 +156,8 @@ function addNewCompanyToScatterNet(){
 
 $("#newCompany > option").each(function() {
     //alert(this.text + ' ' + this.value);
-    for(var i=0;i<scatterNetData.length;i++){
-        if(this.text==scatterNetData[i]['name']){
+    for(var i=0;i<globalNodes.length;i++){
+        if(this.text==globalNodes[i]['name']){
             //$(this).find('value:'+this.text).css('background-color', 'red');
             //$(this).css('background-color', '#81DAF5');
             $(this).css('color', '#c3c3c3');
@@ -136,34 +168,34 @@ $("#newCompany > option").each(function() {
     
 }
 
-function addPartners(forCompany){
+function addPartners(forCompany,callback){
     var targetVal, addedCompany ;
     var partnerCompanies=getPartners(forCompany);
     var partnerCompany;
     //console.log("partnerCompanies");
     //console.log(partnerCompanies);
-    for(var i =0 ; i<scatterNetData.length; i++){
-      if(scatterNetData[i]['name']==forCompany){
-        scatterNetData[i]['expanded']="true";
+    for(var i =0 ; i<globalNodes.length; i++){
+      if(globalNodes[i]['name']==forCompany){
+        globalNodes[i]['expanded']="true";
       }
     }
     var sourceVal,targetVal;
 
     for(var i=0;i<partnerCompanies.length;i++){
-        for(var j =0;j<companies.length;j++){
-            if(companies[j]['name']==partnerCompanies[i]){
-                if(companyExistsInNodes(companies[j]['name'])==-1){
-                    scatterNetData.push({"name":companies[j]['name'],"highPrice":companies[j]['highPrice'],"allianceCount":companies[j]['allianceCount'],"companySize":companies[j]['companySize'],"expanded":"false"});                
+        for(var j =0;j<globalAllCompanies.length;j++){
+            if(globalAllCompanies[j]['name']==partnerCompanies[i]){
+                if(companyExistsInNodes(globalAllCompanies[j]['name'])==-1){
+                    globalNodes.push({"name":globalAllCompanies[i]['name'],"highPrice":globalAllCompanies[i]['highPrice'],"allianceCount":globalAllCompanies[i]['allianceCount'],"companySize":globalAllCompanies[i]['companySize'],"expanded":"false","selected":"false","type":getCompanyType(globalAllCompanies[i]['name']),"sectorColor":getSectorColor(globalAllCompanies[i]['name'])});                
                     sourceVal = companyExistsInNodes(forCompany);
-                    targetVal = companyExistsInNodes(companies[j]['name']);
+                    targetVal = companyExistsInNodes(globalAllCompanies[j]['name']);
                     if(isReversedLink(JSON.parse('{"source":'+sourceVal+',"target":'+targetVal+'}'))==0){
-                        scatterNetLinks.push(JSON.parse('{"source":'+sourceVal+',"target":'+targetVal+'}'));
+                        globalLinks.push(JSON.parse('{"source":'+sourceVal+',"target":'+targetVal+'}'));
                     }
                 }else{
                     sourceVal = companyExistsInNodes(forCompany);
-                    targetVal = companyExistsInNodes(companies[j]['name']);
+                    targetVal = companyExistsInNodes(globalAllCompanies[j]['name']);
                     if(isReversedLink(JSON.parse('{"source":'+sourceVal+',"target":'+targetVal+'}'))==0){
-                        scatterNetLinks.push(JSON.parse('{"source":'+sourceVal+',"target":'+targetVal+'}'));
+                        globalLinks.push(JSON.parse('{"source":'+sourceVal+',"target":'+targetVal+'}'));
                     }
                 }
             }
@@ -171,18 +203,18 @@ function addPartners(forCompany){
     }
     //console.log("In addPartners()");
     //console.log("nodes");
-    //console.log(scatterNetData);
+    //console.log(globalNodes);
     //console.log("links");
-    //console.log(scatterNetLinks);
+    //console.log(globalLinks);
     //just to make sure new nodes added are also linked to others on screen
-    for(var i=0;i<scatterNetData.length;i++){
-        for(var j=0;j<scatterNetData.length;j++){
-            for(var k=0;k<alliances.length;k++){
-                if((alliances[k]['company1']==scatterNetData[i]['name'] && alliances[k]['company2']==scatterNetData[j]['name']) || (alliances[k]['company2']==scatterNetData[i]['name'] && alliances[k]['company1']==scatterNetData[j]['name'])){
-                   sourceVal=companyExistsInNodes(scatterNetData[i]['name']);
-                   targetVal=companyExistsInNodes(scatterNetData[j]['name']);
+    for(var i=0;i<globalNodes.length;i++){
+        for(var j=0;j<globalNodes.length;j++){
+            for(var k=0;k<globalAllAlliances.length;k++){
+                if((globalAllAlliances[k]['company1']==globalNodes[i]['name'] && globalAllAlliances[k]['company2']==globalNodes[j]['name']) || (globalAllAlliances[k]['company2']==globalNodes[i]['name'] && globalAllAlliances[k]['company1']==globalNodes[j]['name'])){
+                   sourceVal=companyExistsInNodes(globalNodes[i]['name']);
+                   targetVal=companyExistsInNodes(globalNodes[j]['name']);
                    if(isReversedLink(JSON.parse('{"source":'+sourceVal+',"target":'+targetVal+'}'))==0){
-                        scatterNetLinks.push(JSON.parse('{"source":'+sourceVal+',"target":'+targetVal+'}'));
+                        globalLinks.push(JSON.parse('{"source":'+sourceVal+',"target":'+targetVal+'}'));
                     }
                 }
             }
@@ -191,8 +223,8 @@ function addPartners(forCompany){
 
 $("#newCompany > option").each(function() {
     //alert(this.text + ' ' + this.value);
-    for(var i=0;i<scatterNetData.length;i++){
-        if(this.text==scatterNetData[i]['name']){
+    for(var i=0;i<globalNodes.length;i++){
+        if(this.text==globalNodes[i]['name']){
             //$(this).find('value:'+this.text).css('background-color', 'red');
             //$(this).css('background-color', '#81DAF5');
             $(this).css('color', '#c3c3c3');
@@ -201,23 +233,8 @@ $("#newCompany > option").each(function() {
 });
 
     showScatterPlot();
+    callback.call(this);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 //-----------------------------------------------------
 
@@ -252,6 +269,8 @@ function mouseover(d) {
 // call the method below to draw scatterNet
 
 function showScatterPlot() {
+
+    updateNetworkInfo();
     d3.select("svg")
       .remove();
     // just to have some space around items. 
@@ -261,9 +280,13 @@ function showScatterPlot() {
             "top": 30,
             "bottom": 30
     };
-
+    /*
     var xAxisVal=document.getElementById("xAxis").value;
     var yAxisVal=document.getElementById("yAxis").value;
+    */
+    var xAxisVal="highPrice";
+    var yAxisVal="allianceCount";
+
     var width = document.getElementById("viz").offsetWidth;
     var height = document.getElementById("viz").offsetHeight;
     
@@ -278,7 +301,7 @@ function showScatterPlot() {
     // the domain define the min and max variables to show. In this case, it's the min and max highPrices of items.
     // this is made a compact piece of code due to d3.extent which gives back the max and min of the highPrice variable within the dataset
     var x = d3.scale.linear()
-        .domain(d3.extent(scatterNetData, function (d) {
+        .domain(d3.extent(globalNodes, function (d) {
         if(document.getElementById("xAxis").value=="allianceCount"){
                 return d.allianceCount;
         }else if(document.getElementById("xAxis").value=="highPrice"){
@@ -292,7 +315,7 @@ function showScatterPlot() {
 
     // this does the same as for the y axis but maps from the allianceCount variable to the height to 0. 
     var y = d3.scale.linear()
-        .domain(d3.extent(scatterNetData, function (d) {
+        .domain(d3.extent(globalNodes, function (d) {
         if(document.getElementById("yAxis").value=="allianceCount"){
                 return d.allianceCount;
         }else if(document.getElementById("yAxis").value=="highPrice"){
@@ -326,7 +349,7 @@ function showScatterPlot() {
     svg.selectAll("g.x_axis").call(xAxis);
 
     // now, we can get down to the data part, and drawing stuff. We are telling D3 that all nodes (g elements with class node) will have data attached to them. The 'key' we use (to let D3 know the uniqueness of items) will be the name. Not usually a great key, but fine for this example.
-    var node = svg.selectAll("g.node").data(scatterNetData, function (d) {
+    var node = svg.selectAll("g.node").data(globalNodes, function (d) {
         return d.name;
     });
 
@@ -340,51 +363,77 @@ function showScatterPlot() {
         return "translate(" + x(d[xAxisVal]) + "," + y(d[yAxisVal]) + ")";
         //return "translate(" + x(d.highPrice) + "," + y(d.allianceCount) + ")";
     })
-    .on("dblclick",function(d){addPartners(d.name);})
+    .on("click",function(d){
+        for(var i=0;i<globalNodes.length;i++){
+    globalNodes[i]['selected']="false";
+    if(globalNodes[i]['name']==d.name){
+      globalNodes[i]['selected']="true";
+    }
+  }
+  d3.selectAll(".dot")
+    .attr("stroke",function(i){ 
+      if(i.selected=="true") return "orange";
+    })
+    .attr("stroke-width",function(i){ 
+      if(i.selected=="true") return "1";
+    });
+
+    showCompanyInfo(d.name);
+
+    })// end of click
+    .on("dblclick",function(d){
+        $('#viz').fadeOut();
+        $('#spinner').fadeIn(function(){
+        addPartners(d.name,function() {
+            $('#spinner').fadeOut();
+        });
+        
+      });$('#viz').fadeIn();}
+    )
     .on("mouseover",function(d){ //MOUSEOVER behavior
        //console.log("mouseover"); 
       var selectedCompanyIndex=companyExistsInNodes(d.name);
-
+/*
       link = svg.selectAll(".link")
-      .data(scatterNetLinks)
+      .data(links)
       .enter()
       .append("line")
       .attr("class", "link")
       .attr("x1",function(d){
         if(d.source==selectedCompanyIndex || d.target==selectedCompanyIndex)
-            {return x(scatterNetData[d.source][xAxisVal]);}
+            {return x(data[d.source].highPrice);}
       }).attr("y1",function(d){
         if(d.source==selectedCompanyIndex || d.target==selectedCompanyIndex)
-        {return y(scatterNetData[d.source][yAxisVal]);}
+        {return y(data[d.source].allianceCount);}
       }).attr("x2",function(d){
         if(d.source==selectedCompanyIndex || d.target==selectedCompanyIndex)
-        {return x(scatterNetData[d.target][xAxisVal]);}
+        {return x(data[d.target].highPrice);}
       }).attr("y2",function(d){
         if(d.source==selectedCompanyIndex || d.target==selectedCompanyIndex)
-        {return y(scatterNetData[d.target][yAxisVal]);}
-      });
-/*
+        {return y(data[d.target].allianceCount);}
+      });*/
 link = svg.selectAll(".link")
-      .data(scatterNetLinks)
+      .data(globalLinks)
       .enter()
       .append("path")
       .attr("d", "M0,-5L10,0L0,5")
       .attr("class", "link");
 
+
 link.attr("d", function(d) {
     if(d.source==selectedCompanyIndex || d.target==selectedCompanyIndex){
-        var dx = x(scatterNetData[d.target][xAxisVal]) - x(scatterNetData[d.source][xAxisVal]),
-            dy = x(scatterNetData[d.target][yAxisVal]) - y(scatterNetData[d.source][yAxisVal]),
+        var dx = x(globalNodes[d.target][xAxisVal]) - x(globalNodes[d.source][xAxisVal]),
+            dy = x(globalNodes[d.target][yAxisVal]) - y(globalNodes[d.source][yAxisVal]),
             dr = Math.sqrt(dx * dx + dy * dy);
         return "M" + 
-            x(scatterNetData[d.source][xAxisVal]) + "," + 
-            y(scatterNetData[d.source][yAxisVal]) + "A" + 
+            x(globalNodes[d.source][xAxisVal]) + "," + 
+            y(globalNodes[d.source][yAxisVal]) + "A" + 
             dr + "," + dr + " 0 0,1 " + 
-            x(scatterNetData[d.target][xAxisVal]) + "," + 
-            y(scatterNetData[d.target][yAxisVal]);
+            x(globalNodes[d.target][xAxisVal]) + "," + 
+            y(globalNodes[d.target][yAxisVal]);
     }
     });
-*/
+    
 d3.selectAll(".dot")
 .style("opacity", function(i) {
            if(i.name==d.name || getPartners(d.name).indexOf(i.name) > -1){
@@ -456,5 +505,4 @@ nodeGroup.append("text")
   .style("text-anchor", "middle")
   .attr("dy", -10)
   .text(function(d){if(isExpanded(d.name)){return d.name;}});
-
 }

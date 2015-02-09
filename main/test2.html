@@ -151,6 +151,18 @@ By type: size of node is based upon the number of alliances it has">Node Sizing<
      </li>
    </ul>
   </li>
+  <li class="can-sub"><a href="#"><span><abbr title="None(default): all nodes are drawn as circles
+By type: public->circles,
+              private->rectangles">Node Shape</span></a>
+    <ul>
+      <li>
+        <select style="width:100%;" id="shaping" onchange="drawStuff()">
+            <option value="none">None</option>
+            <option value="bytype">By type</option>
+       </select>
+      </li>
+    </ul>    
+  </li>
 </ul>
 </div><!--end of filterPanel-->        
 
@@ -208,7 +220,8 @@ By type: size of node is based upon the number of alliances it has">Node Sizing<
             <span class="fa fa-search" style="font-size:20px;"></span>&nbsp;&nbsp;&nbsp;<input id="search" onkeyup="searchNode();" placeholder="Quick Search">
             <!--<button type="button" onclick="searchNode()">Search</button>-->
         </div>
-        <p id="spinner" align="center"><span style="font-size:50px;" class="fa fa-spinner"></span></p>
+        <!--<p id="spinner" align="center"><span style="font-size:50px;" class="fa fa-spinner"></span></p>-->
+        <img src="images/loadingicon.gif" id="spinner"></img>
         <div id="viz" style="width:100%;height:90%;">
 
         </div>

@@ -49,7 +49,6 @@ $(function(){
 $("#search").autocomplete({
         source: optArray
 });});
-//console.log(optArray);
 }
 
 
@@ -183,11 +182,11 @@ function getSectorDesc(forCompany){
 
 
 function colorBasedOnSector(sectorColor){
-  if (sectorColor=="red") {return "#8B0707"; }
-  else if(sectorColor=="blue") {return "#0099C6";}
-  else if(sectorColor=="orange") {return "#E67300";}
+  if (sectorColor=="red") {return "#DC3912"; }
+  else if(sectorColor=="blue") {return "#3366CC";}
+  else if(sectorColor=="orange") {return "#FF9900";}
   else if(sectorColor=="green") {return "#109618";}
-  else if(sectorColor=="purple") {return "#994499";}
+  else if(sectorColor=="purple") {return "#990099";}
   else {return "#77777E";}
 }
 
@@ -526,15 +525,15 @@ function mouseover(d) {
       d3.selectAll(".link").transition().duration(500)
         //.style("opacity", function(o) {
         //return o.source === d || o.target === d ? 1 : 0.5;
-        .style("stroke", function(o) {
-          return o.source === d || o.target === d ? "#101010 " : colorLinkBasedOnNodes(o.source.sectorColor,o.target.sectorColor);
-      }).style("opacity", function(o) {
-           return o.source === d || o.target === d ? 1 : 0.1;
+        /*.style("stroke", function(o) {
+          return o.source === d || o.target === d ? "#101010" : colorLinkBasedOnNodes(o.source.sectorColor,o.target.sectorColor);
+      })*/.style("opacity", function(o) {
+           return o.source === d || o.target === d ? 1 : 0.05;
         });
       
       d3.selectAll(".node").transition().duration(500)
         .style("opacity", function(o) {
-           return neighboring(d, o) ? 1 : 0.6;
+           return neighboring(d, o) ? 1 : 0.05;
         });
       
       d3.selectAll(".node")
@@ -546,16 +545,66 @@ function mouseover(d) {
         .attr("style", "font-size: 10; font-family:sans-serif;")
         .text(function(o) { return neighboring(d, o) ? o.name : ""; });
 
-      d3.selectAll(".node")
+  if($('#shaping').val()=="bytype"){
+    var allRects = d3.selectAll(".node")
+        .select("rect");
+    var allCircles = d3.selectAll(".node")
+        .select("circle");
+
+    allCircles.transition().duration(500)
+        .attr("r",function(i){
+          if(i.name==d.name){
+            return "12";
+          }else{
+            if($('#sizing').val()=="alliancecount"){
+              return (((10-4)*(getNumberOfAlliances(i.name))))/(767)+4;
+            }else{
+              return "4";
+            }
+          }
+        });
+
+    allRects.transition().duration(500)
+        .attr("width",function(i){
+          if(i.name==d.name){
+            return "12";
+          }else{
+            if($('#sizing').val()=="alliancecount"){
+              return (((10-5)*(getNumberOfAlliances(i.name))))/(767)+5;
+            }else{
+              return "5";
+            }
+          }
+        })
+        .attr("height",function(i){ 
+          if(i.name==d.name){
+            return "12";
+          }else{
+            if($('#sizing').val()=="alliancecount"){
+              return (((10-5)*(getNumberOfAlliances(i.name))))/(767)+5;
+            }else{
+              return "5";
+            }
+          }
+        });
+
+  }
+  else{
+    d3.selectAll(".node")
         .select("circle")
         .transition().duration(500)
         .attr("r",function(i){
           if(i.name==d.name){
             return "12";
           }else{
-            return "4";
+            if($('#sizing').val()=="alliancecount"){
+              return (((10-4)*(getNumberOfAlliances(i.name))))/(767)+4;
+            }else{
+              return "4";
+            }
           }
         });
+  }
 
       /*
       d3.select(this).append("text")
@@ -579,16 +628,52 @@ function mouseout(d) {
   d3.selectAll(".node").transition().duration(500)
         .style("opacity", 1);
   
-  d3.selectAll(".node").select("circle").transition().duration(500)
+
+  if($('#shaping').val()=="bytype"){
+    var allRects = d3.selectAll(".node")
+        .select("rect");
+    var allCircles = d3.selectAll(".node")
+        .select("circle");
+
+    allCircles.transition().duration(500)
         .attr("r", function(i){
-        if($('#sizing').val()=="alliancecount"){
-          var nodeRadius = (((10-4)*(getNumberOfAlliances(i.name))))/(767)+4;  //maxCount = 767, minCount=0, f(x) = (((b-a)*(x-min))/(max-min))+a , a=4,b=10
-          return nodeRadius;
-        }else{
-          return "4";
-        }
+          if($('#sizing').val()=="alliancecount"){
+            var nodeRadius = (((10-4)*(getNumberOfAlliances(i.name))))/(767)+4;  //maxCount = 767, minCount=0, f(x) = (((b-a)*(x-min))/(max-min))+a , a=4,b=10
+            return nodeRadius;
+          }else{
+            return "4";
+          }
         });
 
+    allRects.transition().duration(500)
+        .attr("width",function(i){
+          if($('#sizing').val()=="alliancecount"){
+            var nodeWidth = (((10-4)*(getNumberOfAlliances(i.name))))/(767)+4;  //maxCount = 767, minCount=0, f(x) = (((b-a)*(x-min))/(max-min))+a , a=4,b=10
+            return nodeWidth;
+          }else{
+            return "5";
+          }
+        })
+        .attr("height",function(i){
+          if($('#sizing').val()=="alliancecount"){
+            var nodeHeight = (((10-5)*(getNumberOfAlliances(i.name))))/(767)+5;  //maxCount = 767, minCount=0, f(x) = (((b-a)*(x-min))/(max-min))+a , a=4,b=10
+            return nodeHeight;
+          }else{
+            return "5";
+          }
+        });
+  }
+  else{
+    d3.selectAll(".node").select("circle").transition().duration(500)
+          .attr("r", function(i){
+          if($('#sizing').val()=="alliancecount"){
+            var nodeRadius = (((10-5)*(getNumberOfAlliances(i.name))))/(767)+5;  //maxCount = 767, minCount=0, f(x) = (((b-a)*(x-min))/(max-min))+a , a=4,b=10
+            return nodeRadius;
+          }else{
+            return "4";
+          }
+          });
+  }
 
   d3.selectAll(".tempLabel").remove();
 }
@@ -602,6 +687,26 @@ function mouseClick(d){
     }
   }
   
+
+if($('#shaping').val()=="bytype"){
+  var allRects = d3.selectAll("rect");
+  var allCircles = d3.selectAll("circle");
+
+  allRects.attr("stroke",function(i){ 
+      if(i.selected=="true") return "black";
+    })
+    .attr("stroke-width",function(i){ 
+      if(i.selected=="true") return "2";
+    });
+    
+  allCircles.attr("stroke",function(i){ 
+      if(i.selected=="true") return "black";
+    })
+    .attr("stroke-width",function(i){ 
+      if(i.selected=="true") return "2";
+    });
+}
+else{
   d3.selectAll("circle")
     .attr("stroke",function(i){ 
       if(i.selected=="true") return "black";
@@ -609,19 +714,8 @@ function mouseClick(d){
     .attr("stroke-width",function(i){ 
       if(i.selected=="true") return "2";
     });
-
+}
   showCompanyInfo(d.name);
-  /*
-  d3.selectAll("circle")
-    .attr("stroke",function(i){ 
-      if(d.name==i.name) return "orange";
-      else return "black";
-    })
-    .attr("stroke-width",function(i){ 
-      if(d.name==i.name) return "4";
-      else return "2";
-    });
-  */
 }
 
 function clearSelections(){
@@ -775,68 +869,85 @@ force.nodes(nodes)
       //.call(force.drag);
       .call(drag);
 
-  node.append("circle")
-      .attr("r", function(d){
-        if($('#sizing').val()=="alliancecount"){
-          var nodeRadius = (((10-4)*(getNumberOfAlliances(d.name))))/(767)+4;  //maxCount = 767, minCount=0, f(x) = (((b-a)*(x-min))/(max-min))+a , a=4,b=10
-          return nodeRadius;
-        }else{
-          return "4";
-        }
-      })
-      .on("dblclick",function(d){
-        $('#viz').fadeOut();
-        $('#spinner').fadeIn(function(){
-        isExpanded(d.name)==1?removePartners(d.name,function() {
-            $('#spinner').fadeOut();
-        }):addPartners(d.name,function() {
-            $('#spinner').fadeOut();
-        });
-    });
-        $('#viz').fadeIn();
+  if($('#shaping').val()=="bytype"){
+    
+    node.each(function(d){
+      if(d.type=="private"){
+        d3.select(this).append("circle")
+        .attr("r", function(d){
+          if($('#sizing').val()=="alliancecount"){
+            var nodeRadius = (((10-4)*(getNumberOfAlliances(d.name))))/(767)+4;  //maxCount = 767, minCount=0, f(x) = (((b-a)*(x-min))/(max-min))+a , a=4,b=10
+            return nodeRadius;
+          }else{
+            return "4";
+          }
+        })
+        .on("dblclick",function(d){
+          $('#viz').fadeOut();
+          $('#spinner').fadeIn(function(){
+          isExpanded(d.name)==1?removePartners(d.name,function() {
+              $('#spinner').fadeOut();
+          }):addPartners(d.name,function() {
+              $('#spinner').fadeOut();
+          });
       });
+          $('#viz').fadeIn();
+        });
+      }else{
+        d3.select(this).append("rect")
+        .attr("width",function(d){
+          if($('#sizing').val()=="alliancecount"){
+            var nodeWidth = (((10-5)*(getNumberOfAlliances(d.name))))/(767)+5;  //maxCount = 767, minCount=0, f(x) = (((b-a)*(x-min))/(max-min))+a , a=4,b=10
+            return nodeWidth;
+          }else{
+            return "5";
+          }
+        })
+        .attr("height",function(d){
+          if($('#sizing').val()=="alliancecount"){
+            var nodeHeight = (((10-5)*(getNumberOfAlliances(d.name))))/(767)+5;  //maxCount = 767, minCount=0, f(x) = (((b-a)*(x-min))/(max-min))+a , a=4,b=10
+            return nodeHeight;
+          }else{
+            return "5";
+          }
+        })
+        .on("dblclick",function(d){
+          $('#viz').fadeOut();
+          $('#spinner').fadeIn(function(){
+          isExpanded(d.name)==1?removePartners(d.name,function() {
+              $('#spinner').fadeOut();
+          }):addPartners(d.name,function() {
+              $('#spinner').fadeOut();
+          });
+      });
+          $('#viz').fadeIn();
+        });
+      }
+    });  
+  }
+  else{
+    node.append("circle")
+        .attr("r", function(d){
+          if($('#sizing').val()=="alliancecount"){
+            var nodeRadius = (((10-4)*(getNumberOfAlliances(d.name))))/(767)+4;  //maxCount = 767, minCount=0, f(x) = (((b-a)*(x-min))/(max-min))+a , a=4,b=10
+            return nodeRadius;
+          }else{
+            return "4";
+          }
+        })
+        .on("dblclick",function(d){
+          $('#viz').fadeOut();
+          $('#spinner').fadeIn(function(){
+          isExpanded(d.name)==1?removePartners(d.name,function() {
+              $('#spinner').fadeOut();
+          }):addPartners(d.name,function() {
+              $('#spinner').fadeOut();
+          });
+      });
+          $('#viz').fadeIn();
+        });
+  }
 
-
-/*
-  node.each(function(d){
-    if(d.type=="public"){
-      node.append("circle")
-      .attr("r", function(d){
-        if($('#sizing').val()=="alliancecount"){
-          var nodeRadius = (((10-4)*(getNumberOfAlliances(d.name))))/(767)+4;  //maxCount = 767, minCount=0, f(x) = (((b-a)*(x-min))/(max-min))+a , a=4,b=10
-          return nodeRadius;
-        }else{
-          return "4";
-        }
-      })
-      .on("dblclick",function(d){
-        $('#viz').fadeOut();
-        $('#spinner').fadeIn(function(){
-        isExpanded(d.name)==1?removePartners(d.name,function() {
-            $('#spinner').fadeOut();
-        }):addPartners(d.name,function() {
-            $('#spinner').fadeOut();
-        });
-    });
-        $('#viz').fadeIn();
-      });
-    }else{
-      node.append("rect")
-      .attr("width",5)
-      .attr("height",5)
-      .on("dblclick",function(d){
-        $('#viz').fadeOut();
-        $('#spinner').fadeIn(function(){
-        isExpanded(d.name)==1?removePartners(d.name,function() {
-            $('#spinner').fadeOut();
-        }):addPartners(d.name,function() {
-            $('#spinner').fadeOut();
-        });
-    });
-        $('#viz').fadeIn();
-      });
-    }
-  });*/
   
 
   d3.selectAll(".node")
