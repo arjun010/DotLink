@@ -1,13 +1,3 @@
-/*var newlinks = [
-{
-  "source":1,
-  "target":0,
-},
-{
-  "source":0,
-  "target":1,
-}];
-*/
 var filteredPathViewLinks = [];
 var filteredPathViewNodes = [];
 var filteredScatterNetLinks = [];
@@ -15,16 +5,72 @@ var filteredScatterNetNodes = [];
 var filteredSegmentViewLinks=[];
 var filteredSegmentViewNodes=[];
 var firstTime =1;
-// common use functions
-
-//console.log(getCountOfAlliancesBetweenCompanies("sap ag","microsoft corp"));
-
 function getCompanyAtIndex(index){
   for(var i=0;i<globalNodes.length;i++){
     if(index == i){
       return globalNodes[i];
     }
   }
+}
+
+function returnMin(list){
+  var min = list[0];
+  for(var i=1;i<list.length;i++){
+    if(min>list[i]){
+      min=list[i];
+    }
+  }
+  return min;
+}
+
+function returnMax(list){
+  var max = list[0];
+  for(var i=1;i<list.length;i++){
+    if(max<list[i]){
+      max=list[i];
+    }
+  }
+  return max;
+}
+
+function getEffectiveQuarterOfAlliancesBetweenCompanies(company1,company2){
+  var list = [];
+  for(var i=0;i<globalAllAlliances.length;i++){
+    if((globalAllAlliances[i]['company1']==company1 && globalAllAlliances[i]['company2']==company2) || (globalAllAlliances[i]['company1']==company2 && globalAllAlliances[i]['company2']==company1)){
+      list.push(globalAllAlliances[i]['effectivequarter']);
+    }
+  }
+  return returnMin(list);
+}
+
+function getEffectiveYearOfAlliancesBetweenCompanies(company1,company2){
+  var list = [];
+  for(var i=0;i<globalAllAlliances.length;i++){
+    if((globalAllAlliances[i]['company1']==company1 && globalAllAlliances[i]['company2']==company2) || (globalAllAlliances[i]['company1']==company2 && globalAllAlliances[i]['company2']==company1)){
+      list.push(globalAllAlliances[i]['effectiveyear']);
+    }
+  }
+  return returnMin(list);
+}
+
+function getTerminatedQuarterOfAlliancesBetweenCompanies(company1,company2){
+  var list = [];
+  for(var i=0;i<globalAllAlliances.length;i++){
+    if((globalAllAlliances[i]['company1']==company1 && globalAllAlliances[i]['company2']==company2) || (globalAllAlliances[i]['company1']==company2 && globalAllAlliances[i]['company2']==company1)){
+      list.push(globalAllAlliances[i]['terminatedquarter']);
+    }
+  }
+  return returnMax(list);
+}
+
+function getTerminatedYearOfAlliancesBetweenCompanies(company1,company2){
+  var list = [];
+  for(var i=0;i<globalAllAlliances.length;i++){
+    if((globalAllAlliances[i]['company1']==company1 && globalAllAlliances[i]['company2']==company2) || (globalAllAlliances[i]['company1']==company2 && globalAllAlliances[i]['company2']==company1)){
+      list.push(globalAllAlliances[i]['terminatedyear']);
+    }
+  }
+  return returnMax(list);
 }
 
 function getAllAllianceTypesBetween(company1,company2){
@@ -512,7 +558,8 @@ function addNewNode(callback){
 }
 var fromAddPartners = 0;
 function addPartners(companyToAdd,callback){
-
+    console.log("before:");
+    console.log(globalLinks);
     var targetVal, addedCompany ;
     var partnerCompany;
 
@@ -565,20 +612,20 @@ function addPartners(companyToAdd,callback){
     //console.log(globalNodes);
     //drawPathView();
     //console.log("from addPartners")
-    fromAddPartners=1;
-    for(var i=0;i<globalLinks.length;i++){
-      if(typeof(globalLinks[i]['source'])=='number'){
-        globalLinks[i]['source']=globalNodes[globalLinks[i]['source']];
-        globalLinks[i]['target']=globalNodes[globalLinks[i]['target']];
-      }
-    }
-    filterPathView();
+    console.log("after:");
+    console.log(globalLinks);
+    filterPathViewWrapper();
+    //drawPathView();
   }else if(view==2){
     //drawScatternetView();
-    filterScatternet();
+
+    filterScatternetWrapper();
+    
+    //drawScatternetView();
   }else if(view==3){
     //drawSegmentView();
-    filterSegmentView();
+    filterSegmentViewWrapper();
+    //drawSegmentView();
   }
   callback.call(this);
 }
@@ -1204,13 +1251,18 @@ var tip = d3.tip()
   .attr('class', 'd3-tip')
   .offset([0, 0])
   .html(function(d) {
-    return "Effective: <span style='font-family:\"HelveticaNeue-Light\", \"Helvetica Neue Light\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;'>" + d.effective + "</span><br/>Type:<span style='font-family:\"HelveticaNeue-Light\", \"Helvetica Neue Light\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif; '>" + d.type + "</span>";
+    return "Effective: <span style='font-family:\"HelveticaNeue-Light\", \"Helvetica Neue Light\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;'>" + d.effective + "</span><br/>Terminated: <span style='font-family:\"HelveticaNeue-Light\", \"Helvetica Neue Light\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;'>" + d.terminated + "</span><br/>Type:<span style='font-family:\"HelveticaNeue-Light\", \"Helvetica Neue Light\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif; '>" + d.type + "</span>";
   })
 
 function filterPathViewWithLoader(callback){
 filteredPathViewNodes=[];
 filteredPathViewLinks=[];
-if($("#noreltypefilter").is(":checked")){
+var effQuarter = parseInt($("#effquarter").val());
+var endQuarter = parseInt($("#endquarter").val());
+var effYear = parseInt($("#effyear").val());
+var endYear = parseInt($("#endyear").val());
+
+if($("#noreltypefilter").is(":checked") && effQuarter==1 && endQuarter==4 && endYear==2012 && effYear==1990){
   for(var i=0;i<globalNodes.length;i++){
     filteredPathViewNodes.push(globalNodes[i]);
   }
@@ -1253,65 +1305,148 @@ if($("#showcrossborder").is(":checked")){
 if($("#showjointventure").is(":checked")){
   showJV=1;
 }
+
     for(var i=0;i<globalLinks.length;i++){
-        //console.log(typeof(globalLinks[i]['source']))
+        var linkEffQuarter = getEffectiveQuarterOfAlliancesBetweenCompanies(globalLinks[i]['source']['name'],globalLinks[i]['target']['name']);
+        var linkTerminatedQuarter = getTerminatedQuarterOfAlliancesBetweenCompanies(globalLinks[i]['source']['name'],globalLinks[i]['target']['name']);
+        var linkTerminatedYear = getTerminatedYearOfAlliancesBetweenCompanies(globalLinks[i]['source']['name'],globalLinks[i]['target']['name']);
+        var linkEffYear = getEffectiveYearOfAlliancesBetweenCompanies(globalLinks[i]['source']['name'],globalLinks[i]['target']['name']);
         
-        var allTypesInCurrentEdge;
-        allTypesInCurrentEdge = getAllAllianceTypesBetween(globalLinks[i]['source']['name'],globalLinks[i]['target']['name']);
-        for(var j=0;j<relationshipTypesToShow.length;j++){
-          if(objectIsInList(relationshipTypesToShow[j],allTypesInCurrentEdge)==1){
-            if(objectIsInList(globalLinks[i]['source'],filteredPathViewNodes)==0){
-              filteredPathViewNodes.push(globalLinks[i]['source']);
+        if(linkTerminatedYear==-1){
+          if(linkEffYear!=-1){
+            if(linkEffYear<effYear){              
+              addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);     
+            }else if(linkEffYear==effYear){
+              if(linkEffYear==endYear){
+                if(linkEffQuarter<=endQuarter && linkEffQuarter>=effQuarter){
+                  addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);    
+                }
+              }else{
+                addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);
+              }
+            }else{
+              if(linkEffYear<endYear){
+                addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);    
+              }else if(linkEffYear==endYear){
+                if(linkEffQuarter<=endQuarter){
+                  addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);    
+                }
+              }
             }
-            if(objectIsInList(globalLinks[i]['target'],filteredPathViewNodes)==0){
-              filteredPathViewNodes.push(globalLinks[i]['target']);
+          }
+        }else{
+          if(linkEffYear!=-1){
+            if(linkEffYear<effyear){
+                if(linkTerminatedYear>endYear){
+                  addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);
+                }else if(linkTerminatedYear==endYear){
+                  if(linkTerminatedQuarter>=endQuarter){
+                    addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);
+                  }
+                }
+            }else if(linkEffYear==effYear){
+              if(linkTerminatedYear>endYear){
+                if(linkEffQuarter>=effQuarter){
+                  addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);
+                }else if(linkTerminatedYear==endYear){
+                  if(linkEffQuarter>=effQuarter && linkTerminatedQuarter<=endQuarter){
+                    addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);
+                  }
+                }
+              }
+            }else{
+              if(linkTerminatedYear>endYear){
+                addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);
+              }else if(linkTerminatedYear==endYear){
+                if(linkTerminatedQuarter<=endQuarter){
+                  addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);
+                }
+              }
             }
-            if(objectIsInList(globalLinks[i],filteredPathViewLinks)==0){
-              filteredPathViewLinks.push(globalLinks[i]);
-            }
-            //break;
           }
         }
-        if(showCB==1){
-          if(edgeHasCrossBorderAlliance(globalLinks[i]['source']['name'],globalLinks[i]['target']['name'])==1){
-            if(objectIsInList(globalLinks[i]['source'],filteredPathViewNodes)==0){
-              filteredPathViewNodes.push(globalLinks[i]['source']);
-            }
-            if(objectIsInList(globalLinks[i]['target'],filteredPathViewNodes)==0){
-              filteredPathViewNodes.push(globalLinks[i]['target']);
-            }
-            if(objectIsInList(globalLinks[i],filteredPathViewLinks)==0){
-              filteredPathViewLinks.push(globalLinks[i]);
-            }
-            //break;
-          }
-        }
-        if(showJV==1){
-          if(edgeHasJointVenture(globalLinks[i]['source']['name'],globalLinks[i]['target']['name'])==1){
-            if(objectIsInList(globalLinks[i]['source'],filteredPathViewNodes)==0){
-              filteredPathViewNodes.push(globalLinks[i]['source']);
-            }
-            if(objectIsInList(globalLinks[i]['target'],filteredPathViewNodes)==0){
-              filteredPathViewNodes.push(globalLinks[i]['target']);
-            }
-            if(objectIsInList(globalLinks[i],filteredPathViewLinks)==0){
-              filteredPathViewLinks.push(globalLinks[i]);
-            }
-            //break;
-          }
-        }
-        //console.log("end of loop")
-      
-  }
+    }
 }
 drawPathView();
 callback.call(this);
 }
 
+function addLinkToPathView(currentLink,relationshipTypesToShow,showJV,showCB){
+  var allTypesInCurrentEdge,flag=0;
+            allTypesInCurrentEdge = getAllAllianceTypesBetween(currentLink['source']['name'],currentLink['target']['name']);
+              for(var j=0;j<relationshipTypesToShow.length;j++){
+                if(objectIsInList(relationshipTypesToShow[j],allTypesInCurrentEdge)==1){
+                  if(objectIsInList(currentLink['source'],filteredPathViewNodes)==0){
+                    filteredPathViewNodes.push(currentLink['source']);
+                  }
+                  if(objectIsInList(currentLink['target'],filteredPathViewNodes)==0){
+                    filteredPathViewNodes.push(currentLink['target']);
+                  }
+                  if(objectIsInList(currentLink,filteredPathViewLinks)==0){
+                    filteredPathViewLinks.push(currentLink);
+                  }
+                  flag=1;
+                  break;
+                }                
+              }
+            if(flag==1){
+              
+            }else{
+            if(showCB==1){
+              if(edgeHasCrossBorderAlliance(currentLink['source']['name'],currentLink['target']['name'])==1){
+                if(objectIsInList(currentLink['source'],filteredPathViewNodes)==0){
+                  filteredPathViewNodes.push(currentLink['source']);
+                }
+                if(objectIsInList(currentLink['target'],filteredPathViewNodes)==0){
+                  filteredPathViewNodes.push(currentLink['target']);
+                }
+                if(objectIsInList(currentLink,filteredPathViewLinks)==0){
+                  filteredPathViewLinks.push(currentLink);
+                }
+                //continue;
+              }
+            }else{
+            if(showJV==1){
+              if(edgeHasJointVenture(currentLink['source']['name'],currentLink['target']['name'])==1){
+                if(objectIsInList(currentLink['source'],filteredPathViewNodes)==0){
+                  filteredPathViewNodes.push(currentLink['source']);
+                }
+                if(objectIsInList(currentLink['target'],filteredPathViewNodes)==0){
+                  filteredPathViewNodes.push(currentLink['target']);
+                }
+                if(objectIsInList(currentLink,filteredPathViewLinks)==0){
+                  filteredPathViewLinks.push(currentLink);
+                }
+                //continue;
+              }
+            }else{
+            if(relationshipTypesToShow.length==0){
+              if(objectIsInList(currentLink['source'],filteredPathViewNodes)==0){
+                  filteredPathViewNodes.push(currentLink['source']);
+                }
+                if(objectIsInList(currentLink['target'],filteredPathViewNodes)==0){
+                  filteredPathViewNodes.push(currentLink['target']);
+                }
+                if(objectIsInList(currentLink,filteredPathViewLinks)==0){
+                  filteredPathViewLinks.push(currentLink);
+                }
+            } 
+            }
+          } 
+          }
+}
+
+
 function filterPathView(){
 filteredPathViewNodes=[];
 filteredPathViewLinks=[];
-if($("#noreltypefilter").is(":checked")){
+
+var effQuarter = parseInt($("#effquarter").val());
+var endQuarter = parseInt($("#endquarter").val());
+var effYear = parseInt($("#effyear").val());
+var endYear = parseInt($("#endyear").val());
+
+if($("#noreltypefilter").is(":checked") && effQuarter==1 && endQuarter==4 && endYear==2012 && effYear==1990){
   for(var i=0;i<globalNodes.length;i++){
     filteredPathViewNodes.push(globalNodes[i]);
   }
@@ -1355,61 +1490,70 @@ if($("#showjointventure").is(":checked")){
   showJV=1;
 }
     for(var i=0;i<globalLinks.length;i++){
-        //console.log(typeof(globalLinks[i]['source']))
-        
-        var allTypesInCurrentEdge;
-        allTypesInCurrentEdge = getAllAllianceTypesBetween(globalLinks[i]['source']['name'],globalLinks[i]['target']['name']);
-        for(var j=0;j<relationshipTypesToShow.length;j++){
-          if(objectIsInList(relationshipTypesToShow[j],allTypesInCurrentEdge)==1){
-            if(objectIsInList(globalLinks[i]['source'],filteredPathViewNodes)==0){
-              filteredPathViewNodes.push(globalLinks[i]['source']);
+        var linkEffQuarter = getEffectiveQuarterOfAlliancesBetweenCompanies(globalLinks[i]['source']['name'],globalLinks[i]['target']['name']);
+        var linkTerminatedQuarter = getTerminatedQuarterOfAlliancesBetweenCompanies(globalLinks[i]['source']['name'],globalLinks[i]['target']['name']);
+        var linkTerminatedYear = getTerminatedYearOfAlliancesBetweenCompanies(globalLinks[i]['source']['name'],globalLinks[i]['target']['name']);
+        var linkEffYear = getEffectiveYearOfAlliancesBetweenCompanies(globalLinks[i]['source']['name'],globalLinks[i]['target']['name']);
+        if(linkTerminatedYear==-1){
+          if(linkEffYear!=-1){
+            if(linkEffYear<effYear){              
+              addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);     
+            }else if(linkEffYear==effYear){
+              if(linkEffYear==endYear){
+                if(linkEffQuarter<=endQuarter && linkEffQuarter>=effQuarter){
+                  addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);    
+                }
+              }else{
+                addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);
+              }
+            }else{
+              if(linkEffYear<endYear){
+                addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);    
+              }else if(linkEffYear==endYear){
+                if(linkEffQuarter<=endQuarter){
+                  addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);    
+                }
+              }
             }
-            if(objectIsInList(globalLinks[i]['target'],filteredPathViewNodes)==0){
-              filteredPathViewNodes.push(globalLinks[i]['target']);
+          }
+        }else{
+          if(linkEffYear!=-1){
+            if(linkEffYear<effyear){
+                if(linkTerminatedYear>endYear){
+                  addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);
+                }else if(linkTerminatedYear==endYear){
+                  if(linkTerminatedQuarter>=endQuarter){
+                    addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);
+                  }
+                }
+            }else if(linkEffYear==effYear){
+              if(linkTerminatedYear>endYear){
+                if(linkEffQuarter>=effQuarter){
+                  addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);
+                }else if(linkTerminatedYear==endYear){
+                  if(linkEffQuarter>=effQuarter && linkTerminatedQuarter<=endQuarter){
+                    addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);
+                  }
+                }
+              }
+            }else{
+              if(linkTerminatedYear>endYear){
+                addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);
+              }else if(linkTerminatedYear==endYear){
+                if(linkTerminatedQuarter<=endQuarter){
+                  addLinkToPathView(globalLinks[i],relationshipTypesToShow,showJV,showCB);
+                }
+              }
             }
-            if(objectIsInList(globalLinks[i],filteredPathViewLinks)==0){
-              filteredPathViewLinks.push(globalLinks[i]);
-            }
-            //break;
           }
         }
-        if(showCB==1){
-          if(edgeHasCrossBorderAlliance(globalLinks[i]['source']['name'],globalLinks[i]['target']['name'])==1){
-            if(objectIsInList(globalLinks[i]['source'],filteredPathViewNodes)==0){
-              filteredPathViewNodes.push(globalLinks[i]['source']);
-            }
-            if(objectIsInList(globalLinks[i]['target'],filteredPathViewNodes)==0){
-              filteredPathViewNodes.push(globalLinks[i]['target']);
-            }
-            if(objectIsInList(globalLinks[i],filteredPathViewLinks)==0){
-              filteredPathViewLinks.push(globalLinks[i]);
-            }
-            //break;
-          }
-        }
-        if(showJV==1){
-          if(edgeHasJointVenture(globalLinks[i]['source']['name'],globalLinks[i]['target']['name'])==1){
-            if(objectIsInList(globalLinks[i]['source'],filteredPathViewNodes)==0){
-              filteredPathViewNodes.push(globalLinks[i]['source']);
-            }
-            if(objectIsInList(globalLinks[i]['target'],filteredPathViewNodes)==0){
-              filteredPathViewNodes.push(globalLinks[i]['target']);
-            }
-            if(objectIsInList(globalLinks[i],filteredPathViewLinks)==0){
-              filteredPathViewLinks.push(globalLinks[i]);
-            }
-            //break;
-          }
-        }
-        //console.log("end of loop")
-      
-  }
+    }
 }
 drawPathView();
 }
 
 
-
+//console.log(globalLinks);
 function drawPathView() {
   //filterPathView();
   linkedByIndex={};
@@ -1609,6 +1753,7 @@ function drawPathView() {
     firstTime=0;
   }
   pathViewLinks=link;
+  
 }
 
 // ----- path view specific code ends here -----
@@ -1660,7 +1805,12 @@ function computeScatternetLinks(){
 function filterScatternet(){
 filteredScatterNetNodes=[];
 filteredScatterNetLinks=[];
-if($("#noreltypefilter").is(":checked")){
+var effQuarter = parseInt($("#effquarter").val());
+var endQuarter = parseInt($("#endquarter").val());
+var effYear = parseInt($("#effyear").val());
+var endYear = parseInt($("#endyear").val());
+
+if($("#noreltypefilter").is(":checked") && effQuarter==1 && endQuarter==4 && endYear==2012 && effYear==1990){
   for(var i=0;i<globalNodes.length;i++){
     filteredScatterNetNodes.push(globalNodes[i]);
   }
@@ -1704,9 +1854,73 @@ if($("#showjointventure").is(":checked")){
     //console.log("ehre")
     var currentScatternetLinks = computeScatternetLinks();
     for(var i=0;i<currentScatternetLinks.length;i++){
-        var allTypesInCurrentEdge;
+        
         var sourceCompany=getCompanyAtIndex(currentScatternetLinks[i]['source']);
         var targetCompany=getCompanyAtIndex(currentScatternetLinks[i]['target']);
+
+        var linkEffQuarter = getEffectiveQuarterOfAlliancesBetweenCompanies(sourceCompany['name'],targetCompany['name']);
+        var linkTerminatedQuarter = getTerminatedQuarterOfAlliancesBetweenCompanies(sourceCompany['name'],targetCompany['name']);
+        var linkTerminatedYear = getTerminatedYearOfAlliancesBetweenCompanies(sourceCompany['name'],targetCompany['name']);
+        var linkEffYear = getEffectiveYearOfAlliancesBetweenCompanies(sourceCompany['name'],targetCompany['name']);
+
+        if(linkTerminatedYear==-1){
+          if(linkEffYear!=-1){
+            if(linkEffYear<effYear){              
+              addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+            }else if(linkEffYear==effYear){
+              if(linkEffYear==endYear){
+                if(linkEffQuarter<=endQuarter && linkEffQuarter>=effQuarter){
+                  addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+                }
+              }else{
+                addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+              }
+            }else{
+              if(linkEffYear<endYear){
+                addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+              }else if(linkEffYear==endYear){
+                if(linkEffQuarter<=endQuarter){
+                  addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+                }
+              }
+            }
+          }
+        }else{
+          if(linkEffYear!=-1){
+            if(linkEffYear<effyear){
+                if(linkTerminatedYear>endYear){
+                  addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+                }else if(linkTerminatedYear==endYear){
+                  if(linkTerminatedQuarter>=endQuarter){
+                    addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+                  }
+                }
+            }else if(linkEffYear==effYear){
+              if(linkTerminatedYear>endYear){
+                if(linkEffQuarter>=effQuarter){
+                  addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+                }else if(linkTerminatedYear==endYear){
+                  if(linkEffQuarter>=effQuarter && linkTerminatedQuarter<=endQuarter){
+                    addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+                  }
+                }
+              }
+            }else{
+              if(linkTerminatedYear>endYear){
+                addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+              }else if(linkTerminatedYear==endYear){
+                if(linkTerminatedQuarter<=endQuarter){
+                  addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+                }
+              }
+            }
+          }
+        }
+
+
+        /*if(linkEffQuarter>=effQuarter && linkEffYear>=effYear && linkTerminatedYear<=endYear && linkTerminatedQuarter<=endQuarter){
+        var allTypesInCurrentEdge,flag=0;
+
         allTypesInCurrentEdge = getAllAllianceTypesBetween(sourceCompany['name'],targetCompany['name']);
         
         for(var j=0;j<relationshipTypesToShow.length;j++){
@@ -1720,7 +1934,12 @@ if($("#showjointventure").is(":checked")){
             if(objectIsInList(currentScatternetLinks[i],filteredScatterNetLinks)==0){
               filteredScatterNetLinks.push(currentScatternetLinks[i]);
             }
+            flag=1;
+            break;
           }
+        }
+        if(flag==1){
+              continue;
         }
         if(showCB==1){
           if(edgeHasCrossBorderAlliance(sourceCompany['name'],targetCompany['name'])==1){
@@ -1734,6 +1953,7 @@ if($("#showjointventure").is(":checked")){
               filteredScatterNetLinks.push(currentScatternetLinks[i]);
             }
           }
+          continue;
         }
         if(showJV==1){
           if(edgeHasJointVenture(sourceCompany['name'],targetCompany['name'])==1){
@@ -1746,17 +1966,104 @@ if($("#showjointventure").is(":checked")){
             if(objectIsInList(currentScatternetLinks[i],filteredScatterNetLinks)==0){
               filteredScatterNetLinks.push(currentScatternetLinks[i]);
             }
+            continue;
           }
         }
-  }
+        if(relationshipTypesToShow.length==0){
+              if(objectIsInList(sourceCompany,filteredScatterNetNodes)==0){
+              filteredScatterNetNodes.push(sourceCompany);
+            }
+            if(objectIsInList(targetCompany,filteredScatterNetNodes)==0){
+              filteredScatterNetNodes.push(targetCompany);
+            }
+            if(objectIsInList(currentScatternetLinks[i],filteredScatterNetLinks)==0){
+              filteredScatterNetLinks.push(currentScatternetLinks[i]);
+            }
+        }
+  }*/
+}//end of loop
 }
 drawScatternetView();
 }
 
+
+function addLinkToScatternet(currentlink,relationshipTypesToShow,showJV,showCB){        
+        var allTypesInCurrentEdge,flag=0;
+        var sourceCompany=getCompanyAtIndex(currentlink['source']);
+        var targetCompany=getCompanyAtIndex(currentlink['target']);
+        allTypesInCurrentEdge = getAllAllianceTypesBetween(sourceCompany['name'],targetCompany['name']);
+        
+        for(var j=0;j<relationshipTypesToShow.length;j++){
+          if(objectIsInList(relationshipTypesToShow[j],allTypesInCurrentEdge)==1){
+            if(objectIsInList(sourceCompany,filteredScatterNetNodes)==0){
+              filteredScatterNetNodes.push(sourceCompany);
+            }
+            if(objectIsInList(targetCompany,filteredScatterNetNodes)==0){
+              filteredScatterNetNodes.push(targetCompany);
+            }
+            if(objectIsInList(currentlink,filteredScatterNetLinks)==0){
+              filteredScatterNetLinks.push(currentlink);
+            }
+            flag=1;
+            break;
+          }
+        }
+        if(flag==1){
+        }else{  
+        if(showCB==1){
+          if(edgeHasCrossBorderAlliance(sourceCompany['name'],targetCompany['name'])==1){
+            if(objectIsInList(sourceCompany,filteredScatterNetNodes)==0){
+              filteredScatterNetNodes.push(sourceCompany);
+            }
+            if(objectIsInList(targetCompany,filteredScatterNetNodes)==0){
+              filteredScatterNetNodes.push(targetCompany);
+            }
+            if(objectIsInList(currentlink,filteredScatterNetLinks)==0){
+              filteredScatterNetLinks.push(currentlink);
+            }
+          }
+        }else{
+        if(showJV==1){
+          if(edgeHasJointVenture(sourceCompany['name'],targetCompany['name'])==1){
+            if(objectIsInList(sourceCompany,filteredScatterNetNodes)==0){
+              filteredScatterNetNodes.push(sourceCompany);
+            }
+            if(objectIsInList(targetCompany,filteredScatterNetNodes)==0){
+              filteredScatterNetNodes.push(targetCompany);
+            }
+            if(objectIsInList(currentlink,filteredScatterNetLinks)==0){
+              filteredScatterNetLinks.push(currentlink);
+            }
+          }
+        }else{
+
+
+        if(relationshipTypesToShow.length==0){
+              if(objectIsInList(sourceCompany,filteredScatterNetNodes)==0){
+              filteredScatterNetNodes.push(sourceCompany);
+            }
+            if(objectIsInList(targetCompany,filteredScatterNetNodes)==0){
+              filteredScatterNetNodes.push(targetCompany);
+            }
+            if(objectIsInList(currentlink,filteredScatterNetLinks)==0){
+              filteredScatterNetLinks.push(currentlink);
+            }
+        }
+        }
+      }
+    }
+  }
+
+
 function filterScatternetWithLoader(callback){
 filteredScatterNetNodes=[];
 filteredScatterNetLinks=[];
-if($("#noreltypefilter").is(":checked")){
+var effQuarter = parseInt($("#effquarter").val());
+var endQuarter = parseInt($("#endquarter").val());
+var effYear = parseInt($("#effyear").val());
+var endYear = parseInt($("#endyear").val());
+
+if($("#noreltypefilter").is(":checked") && effQuarter==1 && endQuarter==4 && endYear==2012 && effYear==1990){
   for(var i=0;i<globalNodes.length;i++){
     filteredScatterNetNodes.push(globalNodes[i]);
   }
@@ -1800,9 +2107,69 @@ if($("#showjointventure").is(":checked")){
     //console.log("ehre")
     var currentScatternetLinks = computeScatternetLinks();
     for(var i=0;i<currentScatternetLinks.length;i++){
-        var allTypesInCurrentEdge;
         var sourceCompany=getCompanyAtIndex(currentScatternetLinks[i]['source']);
         var targetCompany=getCompanyAtIndex(currentScatternetLinks[i]['target']);
+        var linkEffQuarter = getEffectiveQuarterOfAlliancesBetweenCompanies(sourceCompany['name'],targetCompany['name']);
+        var linkTerminatedQuarter = getTerminatedQuarterOfAlliancesBetweenCompanies(sourceCompany['name'],targetCompany['name']);
+        var linkTerminatedYear = getTerminatedYearOfAlliancesBetweenCompanies(sourceCompany['name'],targetCompany['name']);
+        var linkEffYear = getEffectiveYearOfAlliancesBetweenCompanies(sourceCompany['name'],targetCompany['name']);
+        if(linkTerminatedYear==-1){
+          if(linkEffYear!=-1){
+            if(linkEffYear<effYear){              
+              addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+            }else if(linkEffYear==effYear){
+              if(linkEffYear==endYear){
+                if(linkEffQuarter<=endQuarter && linkEffQuarter>=effQuarter){
+                  addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+                }
+              }else{
+                addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+              }
+            }else{
+              if(linkEffYear<endYear){
+                addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+              }else if(linkEffYear==endYear){
+                if(linkEffQuarter<=endQuarter){
+                  addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+                }
+              }
+            }
+          }
+        }else{
+          if(linkEffYear!=-1){
+            if(linkEffYear<effyear){
+                if(linkTerminatedYear>endYear){
+                  addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+                }else if(linkTerminatedYear==endYear){
+                  if(linkTerminatedQuarter>=endQuarter){
+                    addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+                  }
+                }
+            }else if(linkEffYear==effYear){
+              if(linkTerminatedYear>endYear){
+                if(linkEffQuarter>=effQuarter){
+                  addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+                }else if(linkTerminatedYear==endYear){
+                  if(linkEffQuarter>=effQuarter && linkTerminatedQuarter<=endQuarter){
+                    addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+                  }
+                }
+              }
+            }else{
+              if(linkTerminatedYear>endYear){
+                addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+              }else if(linkTerminatedYear==endYear){
+                if(linkTerminatedQuarter<=endQuarter){
+                  addLinkToScatternet(currentScatternetLinks[i],relationshipTypesToShow,showJV,showCB);
+                }
+              }
+            }
+          }
+        }
+        /*if(linkEffQuarter>=effQuarter && linkEffYear>=effYear && linkTerminatedYear<=endYear && linkTerminatedQuarter<=endQuarter){
+        var allTypesInCurrentEdge,flag=0;
+ 
+
         allTypesInCurrentEdge = getAllAllianceTypesBetween(sourceCompany['name'],targetCompany['name']);
         
         for(var j=0;j<relationshipTypesToShow.length;j++){
@@ -1816,7 +2183,12 @@ if($("#showjointventure").is(":checked")){
             if(objectIsInList(currentScatternetLinks[i],filteredScatterNetLinks)==0){
               filteredScatterNetLinks.push(currentScatternetLinks[i]);
             }
+            flag=1;
+            break;
           }
+        }
+        if(flag==1){
+              continue;
         }
         if(showCB==1){
           if(edgeHasCrossBorderAlliance(sourceCompany['name'],targetCompany['name'])==1){
@@ -1830,6 +2202,7 @@ if($("#showjointventure").is(":checked")){
               filteredScatterNetLinks.push(currentScatternetLinks[i]);
             }
           }
+          continue;
         }
         if(showJV==1){
           if(edgeHasJointVenture(sourceCompany['name'],targetCompany['name'])==1){
@@ -1842,9 +2215,22 @@ if($("#showjointventure").is(":checked")){
             if(objectIsInList(currentScatternetLinks[i],filteredScatterNetLinks)==0){
               filteredScatterNetLinks.push(currentScatternetLinks[i]);
             }
+            continue;
           }
         }
-  }
+        if(relationshipTypesToShow.length==0){
+              if(objectIsInList(sourceCompany,filteredScatterNetNodes)==0){
+              filteredScatterNetNodes.push(sourceCompany);
+            }
+            if(objectIsInList(targetCompany,filteredScatterNetNodes)==0){
+              filteredScatterNetNodes.push(targetCompany);
+            }
+            if(objectIsInList(currentScatternetLinks[i],filteredScatterNetLinks)==0){
+              filteredScatterNetLinks.push(currentScatternetLinks[i]);
+            }
+        }
+  }*/
+}//end of loop
 }
 drawScatternetView();
 callback.call(this);
@@ -2596,9 +2982,21 @@ var linksToSend=[];
 return linksToSend;
 }
 function segmentViewZoomed(){
-  segmentViewContainer.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-  segViewPrevScale=d3.event.scale;
-  segViewPrevTranslate=d3.event.translate;
+  if(firstMoveOnSegmentView==1){
+    console.log("in here")
+    var width = document.getElementById("viz").offsetWidth;
+    var height = document.getElementById("viz").offsetHeight;
+    segmentViewContainer.attr("transform", "translate(" +d3.event.translate+ ")scale(" + d3.event.scale + ")");  
+    console.log(d3.event.translate)
+    segViewPrevScale=d3.event.scale;
+    segViewPrevTranslate=d3.event.translate;
+    firstMoveOnSegmentView=0;
+  }else{
+    console.log("now here")
+    segmentViewContainer.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+    segViewPrevScale=d3.event.scale;
+    segViewPrevTranslate=d3.event.translate;
+  }
 }
 var segmentViewContainer;
 var segViewPrevTranslate=[0,0];
@@ -2647,7 +3045,13 @@ function getCheckedSegments(){
 function filterSegmentView(){
 filteredSegmentViewLinks=[];
 filteredSegmentViewNodes=[];
-if($("#noreltypefilter").is(":checked")){
+var effQuarter = parseInt($("#effquarter").val());
+var endQuarter = parseInt($("#endquarter").val());
+var effYear = parseInt($("#effyear").val());
+var endYear = parseInt($("#endyear").val());
+
+if($("#noreltypefilter").is(":checked") && effQuarter==1 && endQuarter==4 && endYear==2012 && effYear==1990){
+
   for(var i=0;i<globalNodes.length;i++){
     filteredSegmentViewNodes.push(globalNodes[i]);
   }
@@ -2691,47 +3095,62 @@ if($("#showjointventure").is(":checked")){
     //console.log("ehre")
     var currentSegmentViewLinks = computeSegmentViewLinks();
     for(var i=0;i<currentSegmentViewLinks.length;i++){
-        var allTypesInCurrentEdge;
         var sourceCompany=getCompanyAtIndex(currentSegmentViewLinks[i]['source']);
         var targetCompany=getCompanyAtIndex(currentSegmentViewLinks[i]['target']);
-        allTypesInCurrentEdge = getAllAllianceTypesBetween(sourceCompany['name'],targetCompany['name']);
-        
-        for(var j=0;j<relationshipTypesToShow.length;j++){
-          if(objectIsInList(relationshipTypesToShow[j],allTypesInCurrentEdge)==1){
-            if(objectIsInList(sourceCompany,filteredSegmentViewNodes)==0){
-              filteredSegmentViewNodes.push(sourceCompany);
-            }
-            if(objectIsInList(targetCompany,filteredSegmentViewNodes)==0){
-              filteredSegmentViewNodes.push(targetCompany);
-            }
-            if(objectIsInList(currentSegmentViewLinks[i],filteredSegmentViewLinks)==0){
-              filteredSegmentViewLinks.push(currentSegmentViewLinks[i]);
+        var linkEffQuarter = getEffectiveQuarterOfAlliancesBetweenCompanies(sourceCompany['name'],targetCompany['name']);
+        var linkTerminatedQuarter = getTerminatedQuarterOfAlliancesBetweenCompanies(sourceCompany['name'],targetCompany['name']);
+        var linkTerminatedYear = getTerminatedYearOfAlliancesBetweenCompanies(sourceCompany['name'],targetCompany['name']);
+        var linkEffYear = getEffectiveYearOfAlliancesBetweenCompanies(sourceCompany['name'],targetCompany['name']);
+        if(linkTerminatedYear==-1){
+          if(linkEffYear!=-1){
+            if(linkEffYear<effYear){              
+              addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+            }else if(linkEffYear==effYear){
+              if(linkEffYear==endYear){
+                if(linkEffQuarter<=endQuarter && linkEffQuarter>=effQuarter){
+                  addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+                }
+              }else{
+                addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+              }
+            }else{
+              if(linkEffYear<endYear){
+                addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+              }else if(linkEffYear==endYear){
+                if(linkEffQuarter<=endQuarter){
+                  addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+                }
+              }
             }
           }
-        }
-        if(showCB==1){
-          if(edgeHasCrossBorderAlliance(sourceCompany['name'],targetCompany['name'])==1){
-            if(objectIsInList(sourceCompany,filteredSegmentViewNodes)==0){
-              filteredSegmentViewNodes.push(sourceCompany);
-            }
-            if(objectIsInList(targetCompany,filteredSegmentViewNodes)==0){
-              filteredSegmentViewNodes.push(targetCompany);
-            }
-            if(objectIsInList(currentSegmentViewLinks[i],filteredSegmentViewLinks)==0){
-              filteredSegmentViewLinks.push(currentSegmentViewLinks[i]);
-            }
-          }
-        }
-        if(showJV==1){
-          if(edgeHasJointVenture(sourceCompany['name'],targetCompany['name'])==1){
-            if(objectIsInList(sourceCompany,filteredSegmentViewNodes)==0){
-              filteredSegmentViewNodes.push(sourceCompany);
-            }
-            if(objectIsInList(targetCompany,filteredSegmentViewNodes)==0){
-              filteredSegmentViewNodes.push(targetCompany);
-            }
-            if(objectIsInList(currentSegmentViewLinks[i],filteredSegmentViewLinks)==0){
-              filteredSegmentViewLinks.push(currentSegmentViewLinks[i]);
+        }else{
+          if(linkEffYear!=-1){
+            if(linkEffYear<effyear){
+                if(linkTerminatedYear>endYear){
+                  addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+                }else if(linkTerminatedYear==endYear){
+                  if(linkTerminatedQuarter>=endQuarter){
+                    addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+                  }
+                }
+            }else if(linkEffYear==effYear){
+              if(linkTerminatedYear>endYear){
+                if(linkEffQuarter>=effQuarter){
+                  addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+                }else if(linkTerminatedYear==endYear){
+                  if(linkEffQuarter>=effQuarter && linkTerminatedQuarter<=endQuarter){
+                    addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+                  }
+                }
+              }
+            }else{
+              if(linkTerminatedYear>endYear){
+                addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+              }else if(linkTerminatedYear==endYear){
+                if(linkTerminatedQuarter<=endQuarter){
+                  addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+                }
+              }
             }
           }
         }
@@ -2740,10 +3159,82 @@ if($("#showjointventure").is(":checked")){
 drawSegmentView();
 }
 
+
+function addLinkToSegmentView(currentLink,relationshipTypesToShow,showJV,showCB){
+var sourceCompany=getCompanyAtIndex(currentLink['source']);
+var targetCompany=getCompanyAtIndex(currentLink['target']);
+var allTypesInCurrentEdge,flag=0;
+allTypesInCurrentEdge = getAllAllianceTypesBetween(sourceCompany['name'],targetCompany['name']);
+  for(var j=0;j<relationshipTypesToShow.length;j++){
+          if(objectIsInList(relationshipTypesToShow[j],allTypesInCurrentEdge)==1){
+            if(objectIsInList(sourceCompany,filteredSegmentViewNodes)==0){
+              filteredSegmentViewNodes.push(sourceCompany);
+            }
+            if(objectIsInList(targetCompany,filteredSegmentViewNodes)==0){
+              filteredSegmentViewNodes.push(targetCompany);
+            }
+            if(objectIsInList(currentLink,filteredSegmentViewLinks)==0){
+              filteredSegmentViewLinks.push(currentLink);
+            }
+            flag=1;
+            break;
+          }
+        }if(flag==1){
+
+        }else{
+        if(showCB==1){
+          if(edgeHasCrossBorderAlliance(sourceCompany['name'],targetCompany['name'])==1){
+            if(objectIsInList(sourceCompany,filteredSegmentViewNodes)==0){
+              filteredSegmentViewNodes.push(sourceCompany);
+            }
+            if(objectIsInList(targetCompany,filteredSegmentViewNodes)==0){
+              filteredSegmentViewNodes.push(targetCompany);
+            }
+            if(objectIsInList(currentLink,filteredSegmentViewLinks)==0){
+              filteredSegmentViewLinks.push(currentLink);
+            }
+          }
+        }else{
+        if(showJV==1){
+          if(edgeHasJointVenture(sourceCompany['name'],targetCompany['name'])==1){
+            if(objectIsInList(sourceCompany,filteredSegmentViewNodes)==0){
+              filteredSegmentViewNodes.push(sourceCompany);
+            }
+            if(objectIsInList(targetCompany,filteredSegmentViewNodes)==0){
+              filteredSegmentViewNodes.push(targetCompany);
+            }
+            if(objectIsInList(currentLink,filteredSegmentViewLinks)==0){
+              filteredSegmentViewLinks.push(currentLink);
+            }
+          }
+        }else{
+        if(relationshipTypesToShow.length==0){
+              if(objectIsInList(sourceCompany,filteredScatterNetNodes)==0){
+              filteredSegmentViewNodes.push(sourceCompany);
+            }
+            if(objectIsInList(targetCompany,filteredScatterNetNodes)==0){
+              filteredSegmentViewNodes.push(targetCompany);
+            }
+            if(objectIsInList(currentLink,filteredScatterNetLinks)==0){
+              filteredSegmentViewLinks.push(currentLink);
+            }
+        }
+        }
+      }
+    }
+}
+
+
 function filterSegmentViewWithLoader(callback){
 filteredSegmentViewLinks=[];
 filteredSegmentViewNodes=[];
-if($("#noreltypefilter").is(":checked")){
+var effQuarter = parseInt($("#effquarter").val());
+var endQuarter = parseInt($("#endquarter").val());
+var effYear = parseInt($("#effyear").val());
+var endYear = parseInt($("#endyear").val());
+
+if($("#noreltypefilter").is(":checked") && effQuarter==1 && endQuarter==4 && endYear==2012 && effYear==1990){
+
   for(var i=0;i<globalNodes.length;i++){
     filteredSegmentViewNodes.push(globalNodes[i]);
   }
@@ -2787,47 +3278,62 @@ if($("#showjointventure").is(":checked")){
     //console.log("ehre")
     var currentSegmentViewLinks = computeSegmentViewLinks();
     for(var i=0;i<currentSegmentViewLinks.length;i++){
-        var allTypesInCurrentEdge;
         var sourceCompany=getCompanyAtIndex(currentSegmentViewLinks[i]['source']);
         var targetCompany=getCompanyAtIndex(currentSegmentViewLinks[i]['target']);
-        allTypesInCurrentEdge = getAllAllianceTypesBetween(sourceCompany['name'],targetCompany['name']);
-        
-        for(var j=0;j<relationshipTypesToShow.length;j++){
-          if(objectIsInList(relationshipTypesToShow[j],allTypesInCurrentEdge)==1){
-            if(objectIsInList(sourceCompany,filteredSegmentViewNodes)==0){
-              filteredSegmentViewNodes.push(sourceCompany);
-            }
-            if(objectIsInList(targetCompany,filteredSegmentViewNodes)==0){
-              filteredSegmentViewNodes.push(targetCompany);
-            }
-            if(objectIsInList(currentSegmentViewLinks[i],filteredSegmentViewLinks)==0){
-              filteredSegmentViewLinks.push(currentSegmentViewLinks[i]);
+        var linkEffQuarter = getEffectiveQuarterOfAlliancesBetweenCompanies(sourceCompany['name'],targetCompany['name']);
+        var linkTerminatedQuarter = getTerminatedQuarterOfAlliancesBetweenCompanies(sourceCompany['name'],targetCompany['name']);
+        var linkTerminatedYear = getTerminatedYearOfAlliancesBetweenCompanies(sourceCompany['name'],targetCompany['name']);
+        var linkEffYear = getEffectiveYearOfAlliancesBetweenCompanies(sourceCompany['name'],targetCompany['name']);
+        if(linkTerminatedYear==-1){
+          if(linkEffYear!=-1){
+            if(linkEffYear<effYear){              
+              addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+            }else if(linkEffYear==effYear){
+              if(linkEffYear==endYear){
+                if(linkEffQuarter<=endQuarter && linkEffQuarter>=effQuarter){
+                  addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+                }
+              }else{
+                addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+              }
+            }else{
+              if(linkEffYear<endYear){
+                addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+              }else if(linkEffYear==endYear){
+                if(linkEffQuarter<=endQuarter){
+                  addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+                }
+              }
             }
           }
-        }
-        if(showCB==1){
-          if(edgeHasCrossBorderAlliance(sourceCompany['name'],targetCompany['name'])==1){
-            if(objectIsInList(sourceCompany,filteredSegmentViewNodes)==0){
-              filteredSegmentViewNodes.push(sourceCompany);
-            }
-            if(objectIsInList(targetCompany,filteredSegmentViewNodes)==0){
-              filteredSegmentViewNodes.push(targetCompany);
-            }
-            if(objectIsInList(currentSegmentViewLinks[i],filteredSegmentViewLinks)==0){
-              filteredSegmentViewLinks.push(currentSegmentViewLinks[i]);
-            }
-          }
-        }
-        if(showJV==1){
-          if(edgeHasJointVenture(sourceCompany['name'],targetCompany['name'])==1){
-            if(objectIsInList(sourceCompany,filteredSegmentViewNodes)==0){
-              filteredSegmentViewNodes.push(sourceCompany);
-            }
-            if(objectIsInList(targetCompany,filteredSegmentViewNodes)==0){
-              filteredSegmentViewNodes.push(targetCompany);
-            }
-            if(objectIsInList(currentSegmentViewLinks[i],filteredSegmentViewLinks)==0){
-              filteredSegmentViewLinks.push(currentSegmentViewLinks[i]);
+        }else{
+          if(linkEffYear!=-1){
+            if(linkEffYear<effyear){
+                if(linkTerminatedYear>endYear){
+                  addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+                }else if(linkTerminatedYear==endYear){
+                  if(linkTerminatedQuarter>=endQuarter){
+                    addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+                  }
+                }
+            }else if(linkEffYear==effYear){
+              if(linkTerminatedYear>endYear){
+                if(linkEffQuarter>=effQuarter){
+                  addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+                }else if(linkTerminatedYear==endYear){
+                  if(linkEffQuarter>=effQuarter && linkTerminatedQuarter<=endQuarter){
+                    addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+                  }
+                }
+              }
+            }else{
+              if(linkTerminatedYear>endYear){
+                addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+              }else if(linkTerminatedYear==endYear){
+                if(linkTerminatedQuarter<=endQuarter){
+                  addLinkToSegmentView(currentSegmentViewLinks[i],relationshipTypesToShow,showJV,showCB);
+                }
+              }
             }
           }
         }
@@ -2837,7 +3343,7 @@ drawSegmentView();
 callback.call(this);
 }
 
-
+var firstMoveOnSegmentView=1;
 function drawSegmentView() {
 
 d3.selectAll("svg").remove();
@@ -2863,7 +3369,7 @@ var svg = d3.select("#viz").append("svg")
           .call(segmentViewZoom).on("dblclick.zoom",null);
 
 segmentViewContainer=svg.append("g")
-          .attr("class","segmentviewcontainer")          
+          .attr("class","segmentviewcontainer")
           .attr("transform","translate("+width/2+","+height/2+")");
 
 if(segViewPrevTranslate!=[0,0] && segViewPrevScale!=0){
@@ -3009,7 +3515,6 @@ var g = segmentViewContainer.selectAll(".arc")
     .attr("dy", ".35em")
     .attr("style","font-size:15px;")
     .attr("text-anchor", function(d) {
-        // are we past the center?
         return (d.endAngle + d.startAngle)/2 > Math.PI ?
             "end" : "start";
     })

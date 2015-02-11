@@ -36,7 +36,7 @@ var globalAllAlliances = (function() {
         $.ajax({
             'async': false,
             'global': false,
-            'url': "data/alliances.json",
+            'url': "data/alliances_try.json",
             'dataType': "json",
             'success': function (data) {
                 json = data;
@@ -142,7 +142,6 @@ p{
 .pathviewnode text {
   pointer-events: none;
   font: 10px sans-serif;
-
 }
 
 .pathviewnode{
@@ -342,6 +341,34 @@ By type: public->circles,
         <input id="showcrossborder" type="checkbox" onclick="filterData(2)">Cross-border</input>
         <input id="showjointventure" type="checkbox" onclick="filterData(2)">Joint venture</input>
       </li>
+    </ul>
+  </li>
+  <li class="can-sub"><a href="#"><span>Date filter</span></a>
+    <ul>
+      <li align="center">
+        Start quarter:
+        <select id="effquarter" onchange="dateFilterChanged(2)">
+          <option value="1">Q1</option>
+          <option value="2">Q2</option>
+          <option value="3">Q3</option>
+          <option value="4">Q4</option>
+        </select><br/>
+        Start Year:
+        <select id="effyear" onchange="dateFilterChanged(1)">
+          
+        </select><br/>
+        End quarter:
+        <select id="endquarter" onchange="dateFilterChanged(0)">
+          <option value="4">Q4</option>
+          <option value="3">Q3</option>
+          <option value="2">Q2</option>
+          <option value="1">Q1</option>          
+        </select><br/>
+        End year:
+        <select id="endyear" onchange="dateFilterChanged(0)">
+          
+        </select>
+      </li>
     </ul>    
   </li>
   <li class="can-sub"><a href="#"><span>Scatternet Scale</span></a>
@@ -491,6 +518,15 @@ for(var i=0;i<companies.length;i++){
     //$("#newCompany").append('<option value='+"\""+companies[i]['name'] +"\""+'>' + companies[i]['name'] + '</option>');
     allCompanyNames.push(companies[i]['name']);
 }
+for(var i=1990;i<2013;i++){
+  $("#effyear").append('<option value="'+i+'">'+i+'</option>');
+}
+$("#endyear").append('<option value="'+2012+'">'+2012+'</option>');
+for(var i=2011;i>=1990;i--){
+  $("#endyear").append('<option value="'+i+'">'+i+'</option>');
+}
+
+
 })
 $('#panel1').click(function (e) {
     $("#accordion1").removeClass("hide"); 
@@ -629,7 +665,6 @@ $(".menuClose").click(function (e) {
     $("#mainContent").removeClass("col-sm-10");
     $("#mainContent").addClass("col-sm-12");
 })
-
 /*
 function showAllRelTypesToggled(){
   if($("#showallreltypes").is(":checked"))
@@ -676,13 +711,50 @@ function filterData(mode){
     $("#noreltypefilter").prop({ checked: false }); 
   }
   if(view==1){
-    //drawPathView();
-    filterPathViewWrapper();
+    //filterPathViewWrapper();
+    drawPathView();
   }else if(view==2){
-    filterScatternetWrapper();
+    drawScatternetView();
+    //filterScatternetWrapper();
   }else if(view==3){
-    filterSegmentViewWrapper();
+    drawSegmentView();
+    //filterSegmentViewWrapper();
   }
+}
+
+function dateFilterChanged(mode){
+  if(mode==1){
+  $("#endyear").find("option").remove();
+  var startYear = $("#effyear").val();
+  var startQuarter = $("#effquarter").val();
+  var lastEndYear;
+  for(var i=2012;i>=startYear;i--){
+   $("#endyear").append('<option value="'+i+'">'+i+'</option>'); 
+   lastEndYear=i;
+  }
+  if(lastEndYear==startYear){
+    $("#endquarter").find("option").remove();
+    for(var i=4;i>=startQuarter;i--){
+      $("#endquarter").append('<option value="'+i+'">Q'+i+'</option>');
+    }
+  }
+  }else if(mode==2){
+    $("#endquarter").find("option").remove();
+    var startQuarter = $("#effquarter").val();
+    for(var i=4;i>=startQuarter;i--){
+      $("#endquarter").append('<option value="'+i+'">Q'+i+'</option>');
+    }  
+  }
+  if(view==1){
+    //filterPathViewWrapper();
+    drawPathView();
+  }else if(view==2){
+    drawScatternetView();
+    //filterScatternetWrapper();
+  }else if(view==3){
+    drawSegmentView();
+    //filterSegmentViewWrapper();
+  }  
 }
 
 function sectorFilterChanged(){
@@ -735,22 +807,24 @@ function viewToggled(viewId){
     $("#yaxis").addClass("hide");
     $("#segmentviewlegend").addClass("hide");
     view=1;
-    //drawPathView();
-    filterPathView();
+    //filterPathViewWrapper();
+    drawPathView();
   }else if(viewId==2){
     $("#scatternetaxis").removeClass("hide");
     $("#xaxis").removeClass("hide");
     $("#yaxis").removeClass("hide");
     $("#segmentviewlegend").addClass("hide");
     view=2;
-    filterScatternet();
+    drawScatternetView();
+    //filterScatternetWrapper();
   }else if(viewId==3){
     $("#scatternetaxis").addClass("hide");
     $("#xaxis").addClass("hide");
     $("#yaxis").addClass("hide");
     $("#segmentviewlegend").removeClass("hide");
     view=3;
-    filterSegmentView();
+    drawSegmentView();
+    //filterSegmentViewWrapper();
   }
 }
 
@@ -768,7 +842,8 @@ function newAdditionChanged(){
 <!--
 <script type="text/javascript" src="js/testPathView.js"></script>
 <script type="text/javascript" src="js/scatternet_test.js"></script>
--->
 <script type="text/javascript" src="js/new1.js"></script>
+-->
+<script type="text/javascript" src="js/newwithfilter.js"></script>
 </body>
 </html>

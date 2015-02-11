@@ -1,18 +1,5 @@
-/*var newlinks = [
-{
-  "source":1,
-  "target":0,
-},
-{
-  "source":0,
-  "target":1,
-}];
-*/
-
 var firstTime =1;
-// common use functions
 
-//console.log(getCountOfAlliancesBetweenCompanies("sap ag","microsoft corp"));
 function getAllAllianceTypesBetween(company1,company2){
   var allTypes = [],curTypeList=[];
   for(var i=0;i<globalDetailedAlliances.length;i++){
@@ -520,8 +507,9 @@ function addPartners(companyToAdd,callback){
     */
   updateoptArr();
   if(view==1){
-    //console.log(globalLinks);
+    console.log(globalLinks);
     //console.log(globalNodes);
+
     drawPathView();
 
   }else if(view==2){
@@ -1474,6 +1462,8 @@ function computeScatternetLinks(){
 
 function drawScatternetView(){
 
+function drawScatternetView(mode){
+
     d3.select("svg")
       .remove();
     d3.selectAll(".tooltip").remove();
@@ -1895,6 +1885,7 @@ var xVal,yVal;
           }
           });
   }
+
 
     });
 
@@ -2856,7 +2847,7 @@ nodes.on("mouseover",function(d){
     var size = (((20-8)*(getNumberOfAlliances(d.name))))/(767)+8;
     return "font-size:"+size; 
   })
-  .text(function(d){if(isExpanded(d.name)){return d.name;}});;
+  .text(function(d){if(isExpanded(d.name)){return d.name;}});
 
 nodes.on("mouseout",function(){
    d3.selectAll(".arc")
@@ -2879,6 +2870,7 @@ nodes.on("mouseout",function(){
   d3.selectAll(".segmentViewNode")
     .style("opacity",0.7);
 }); 
+}
 
 nodes.on("dblclick",function(d){
         //isExpanded(d.name)==1?removePartners(d.name):addPartners(d.name);

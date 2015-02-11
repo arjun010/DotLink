@@ -53,6 +53,10 @@ app.get('/data/alliances.json', function(request, response) {
   response.sendfile('main/data/alliances.json')
 })
 
+app.get('/data/alliances_try.json', function(request, response) {
+  response.sendfile('main/data/alliances_try.json')
+})
+
 app.get('/data/detailedAlliances.json', function(request, response) {
   response.sendfile('main/data/detailedAlliances.json')
 })
@@ -174,6 +178,10 @@ app.get('/js/new1.js', function(request, response) {
   response.sendfile('main/js/new1.js')
 })
 
+app.get('/js/newwithfilter.js', function(request, response) {
+  response.sendfile('main/js/new1.js')
+})
+
 app.get('/new.html', function(request, response) {
   response.sendfile('main/new.html')
 })
@@ -186,13 +194,12 @@ app.get('/js/jquery.js', function(request, response) {
   response.sendfile('main/js/jquery.js')
 })
 
-app.get('/js/jquery-ui.min.js', function(request, response) {
-  response.sendfile('main/js/jquery-ui.min.js')
-})
-
-
 app.get('/js/jquery-1.11.2.min.js', function(request, response) {
   response.sendfile('main/js/jquery-1.11.2.min.js')
+})
+
+app.get('/js/jquery-ui.min.js', function(request, response) {
+  response.sendfile('main/js/jquery-ui.min.js')
 })
 
 app.listen(app.get('port'), function() {
