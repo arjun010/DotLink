@@ -182,7 +182,7 @@ app.get('/js/newwithfilter.js', function(request, response) {
   response.sendfile('main/js/new1.js')
 })
 
-app.get('js/newWithCommonFilter.js', function(request, response) {
+app.get('/js/newWithCommonFilter.js', function(request, response) {
   response.sendfile('main/js/newWithCommonFilter.js')
 })
 

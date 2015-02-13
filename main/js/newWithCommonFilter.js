@@ -762,6 +762,47 @@ function getAllianceCountBetweenCompanies(company1,company2){
   //console.log("-------");
 }
 
+function computeAllLinksBasedOnGlobalNodes(){
+  var scatternetLinks=[];
+    //console.log(globalLinks);
+    //console.log(globalNodes);
+    for(var i=0;i<globalNodes.length;i++){
+      for(var j=0;j<globalAllAlliances.length;j++){
+        if(globalAllAlliances[j]['company2']==globalNodes[i]['name']){
+          var sourceCompanyName = globalAllAlliances[j]['company1'];
+          var targetCompanyName = globalAllAlliances[j]['company2'];
+          var sourceIndex,targetIndex;
+          if(companyExistsInNodes(sourceCompanyName)!=-1 && companyExistsInNodes(targetCompanyName)!=-1){
+            sourceIndex = companyExistsInNodes(sourceCompanyName);
+            targetIndex = companyExistsInNodes(targetCompanyName);
+          }  
+          if(entryExistsInLinks({"source":sourceIndex,"target":targetIndex},scatternetLinks)==0){
+            scatternetLinks.push({"source":sourceIndex,"target":targetIndex});
+          }
+        }else if(globalAllAlliances[j]["company1"]==globalNodes[i]['name']){
+          var sourceCompanyName = globalAllAlliances[j]['company2'];
+          var targetCompanyName = globalAllAlliances[j]['company1'];
+          var sourceIndex,targetIndex;
+          if(companyExistsInNodes(sourceCompanyName)!=-1 && companyExistsInNodes(targetCompanyName)!=-1){
+            sourceIndex = companyExistsInNodes(sourceCompanyName);
+            targetIndex = companyExistsInNodes(targetCompanyName);
+          }          
+          
+          if(entryExistsInLinks({"source":sourceIndex,"target":targetIndex},scatternetLinks)==0){
+            scatternetLinks.push({"source":sourceIndex,"target":targetIndex});
+          }
+        }
+      }
+    }
+    //console.log(scatternetLinks);
+    var linksToSend=[];
+    for(var i=0;i<scatternetLinks.length;i++){
+      if(typeof(scatternetLinks[i]['source'])!='undefined' && typeof(scatternetLinks[i]['target'])!='undefined'){
+        linksToSend.push(scatternetLinks[i]);
+      }
+    }
+    return linksToSend;
+}
 
 var globalFilteredNodes;
 function filterDataAcrossViews(fromview){
@@ -786,14 +827,14 @@ function filterDataAcrossViews(fromview){
           filteredSegmentViewNodes.push(globalNodes[i]);
         }
       }
-      for(var i=0;i<globalLinks.length;i++){
-        if(fromview==1){
+      if(fromview==1){
+        for(var i=0;i<globalLinks.length;i++){
           filteredPathViewLinks.push(globalLinks[i]);
-        }else if(fromview==2){
-          filteredScatterNetLinks=computeScatternetLinks(globalNodes);
-        }else if(fromview==3){
-          filteredSegmentViewLinks=computeSegmentViewLinks(globalNodes);
         }
+      }else if(fromview==2){
+          filteredScatterNetLinks = computeAllLinksBasedOnGlobalNodes();
+      }else if(fromview==3){
+          filteredSegmentViewLinks = computeAllLinksBasedOnGlobalNodes();
       }
     }else{
     var relationshipTypesToShow = [],showCB=0,showJV=0;
@@ -970,10 +1011,10 @@ function filterDataAcrossViews(fromview){
         //end of pathviewactivated==1
     }
     globalFilteredNodes=filteredPathViewNodes;
-    console.log("globalFilteredNodes path view")
+    /*console.log("globalFilteredNodes path view")
     console.log(globalFilteredNodes)
     console.log("filteredPathViewNodes")
-    console.log(filteredPathViewNodes)
+    console.log(filteredPathViewNodes)*/
     }
     globalFilteredNodes=filteredPathViewNodes;
     
@@ -1085,7 +1126,7 @@ function filterDataAcrossViews(fromview){
 
     //segment view data filtering
     if(fromview==3){
-    var currentSegmentViewLinks = computeSegmentViewLinks(globalFilteredNodes);
+    var currentSegmentViewLinks = computeSegmentViewLinks(filteredSegmentViewNodes);
     for(var i=0;i<currentSegmentViewLinks.length;i++){
       var company1Index = currentSegmentViewLinks[i]['source'];
       var company2Index = currentSegmentViewLinks[i]['target'];
@@ -2498,6 +2539,7 @@ function drawScatternetView(){
     
     d3.selectAll(".scatternetlink").style("opacity",function(i){
       if(i.source==selectedCompanyIndex || i.target==selectedCompanyIndex){
+        //console.log("here")
         return 1;
       }else{
         return 0;
