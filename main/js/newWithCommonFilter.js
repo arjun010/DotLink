@@ -6,6 +6,8 @@ var filteredSegmentViewLinks=[];
 var filteredSegmentViewNodes=[];
 var firstTime =1;
 var pathViewActivated = 0;
+var calledFromDetailedView = 0;
+
 function getCompanyAtIndex(index){
   for(var i=0;i<globalNodes.length;i++){
     if(index == i){
@@ -125,7 +127,6 @@ function refreshData(){
     d3.selectAll(".segmentViewNode").remove();
   }
   firstTime=1;
-  
   /*
   $("#newCompany > option").each(function() {
                $(this).css('color', 'black');  
@@ -481,6 +482,7 @@ function linkIsInList(link,exisitingLinks){
 }
 
 
+
 function addNewNode(callback){
     var companyToAdd = document.getElementById("newCompany");
     if(companyToAdd.value!=""){
@@ -490,7 +492,6 @@ function addNewNode(callback){
         for(var i = 0; i < globalAllAlliances.length; i++){
             // to check if the new company is a target node for any alliance
             if(globalAllAlliances[i]['company2']==companyToAdd.value){
-                console.log(globalAllAlliances[i]['company2'])
                 sourceVal = companyExistsInNodes(globalAllAlliances[i]['company1']);
                 targetVal = companyExistsInNodes(globalAllAlliances[i]['company2']);
                 if(sourceVal!=-1){
@@ -500,7 +501,6 @@ function addNewNode(callback){
                 }
             }// to check if the new company is a source node for any of the existing globalAllCompanies
             else if(globalAllAlliances[i]['company1']==companyToAdd.value){
-                console.log(globalAllAlliances[i]['company1'])
                 sourceVal = companyExistsInNodes(globalAllAlliances[i]['company1']);
                 targetVal = companyExistsInNodes(globalAllAlliances[i]['company2']);
                 if(targetVal!=-1){
@@ -566,13 +566,13 @@ function addPartners(companyToAdd,callback){
                 globalNodes.push(({"name":globalAllAlliances[i]['company2'],"highPrice":getHighPrice(globalAllAlliances[i]['company2']),"allianceCount":getAllianceCount(globalAllAlliances[i]['company2']),"companySize":getCompanySize(globalAllAlliances[i]['company2']),"expanded":"false","selected":"false","type":getCompanyType(globalAllAlliances[i]['company2']),"sectorColor":getSectorColor(globalAllAlliances[i]['company2']),"allSectors":getAllSectors(globalAllAlliances[i]['company2'])}));
                 targetVal = companyExistsInNodes(globalAllAlliances[i]['company2']);
                 if(linkIsInList({"source":sourceVal,"target":targetVal},globalLinks)==-1){
-                  globalLinks.push({"source":sourceVal,"target":targetVal});
+                    globalLinks.push({"source":sourceVal,"target":targetVal});
                 }
             }
             else{
                 if(linkIsInList({"source":sourceVal,"target":targetVal},globalLinks)==-1){
-                  globalLinks.push({"source":sourceVal,"target":targetVal});   
-                }
+                  globalLinks.push({"source":sourceVal,"target":targetVal});
+                }   
             }
         }else if(globalAllAlliances[i]['company2']==companyToAdd){
           partnerCompany = globalAllAlliances[i]['company1'];
@@ -763,7 +763,7 @@ function getAllianceCountBetweenCompanies(company1,company2){
 }
 
 
-
+var globalFilteredNodes;
 function filterDataAcrossViews(fromview){
    filteredPathViewLinks = [];
    filteredPathViewNodes = [];
@@ -790,9 +790,9 @@ function filterDataAcrossViews(fromview){
         if(fromview==1){
           filteredPathViewLinks.push(globalLinks[i]);
         }else if(fromview==2){
-          filteredScatterNetLinks=computeScatternetLinks();
+          filteredScatterNetLinks=computeScatternetLinks(globalNodes);
         }else if(fromview==3){
-          filteredSegmentViewLinks=computeSegmentViewLinks();
+          filteredSegmentViewLinks=computeSegmentViewLinks(globalNodes);
         }
       }
     }else{
@@ -832,7 +832,7 @@ function filterDataAcrossViews(fromview){
     }
 
     //console.log(fromview);
-    if(fromview==1){
+    if(fromview==1 || fromview==2 || fromview==3){
     //path view data filtering
     if(pathViewActivated==0){
     for(var i=0;i<globalLinks.length;i++){
@@ -969,12 +969,41 @@ function filterDataAcrossViews(fromview){
         }//end of for loop
         //end of pathviewactivated==1
     }
+    globalFilteredNodes=filteredPathViewNodes;
+    console.log("globalFilteredNodes path view")
+    console.log(globalFilteredNodes)
+    console.log("filteredPathViewNodes")
+    console.log(filteredPathViewNodes)
     }
-
+    globalFilteredNodes=filteredPathViewNodes;
+    
+    /*for(var i=0;i<filteredPathViewLinks.length;i++){
+      if(typeof(filteredPathViewLinks[i]['source'])=='number'){
+        filteredScatterNetLinks.push(filteredPathViewLinks[i]);
+        filteredSegmentViewLinks.push(filteredPathViewLinks[i]);
+      }else{
+        var sourceIndex = companyExistsInNodes(filteredPathViewLinks[i]['source']['name']);
+        var targetIndex = companyExistsInNodes(filteredPathViewLinks[i]['target']['name']);
+        filteredScatterNetLinks.push({"source":sourceIndex,"target":targetIndex});
+        filteredSegmentViewLinks.push({"source":sourceIndex,"target":targetIndex})
+      }
+    }*/
+    filteredScatterNetNodes=globalFilteredNodes;
+    filteredSegmentViewNodes=globalFilteredNodes;
+    //filteredScatterNetLinks=computeScatternetLinks(filteredScatterNetNodes);
+    //filteredSegmentViewLinks=computeSegmentViewLinks(filteredSegmentViewNodes);
+    /*console.log("globalFilteredNodes path view")
+    console.log(globalFilteredNodes)
+    console.log("filteredPathViewLinks")
+    console.log(filteredPathViewLinks)
+    console.log("filteredScatterNetLinks")
+    console.log(filteredScatterNetLinks)
+    console.log("filteredSegmentViewLinks")
+    console.log(filteredSegmentViewLinks)*/
     //end of path view data filtering
     if(fromview==2){
     //scatternet data filtering
-    var currentScatternetLinks = computeScatternetLinks();
+    var currentScatternetLinks = computeScatternetLinks(filteredScatterNetNodes);
     //console.log(endYear,endQuarter,effYear,effQuarter)
     for(var i=0;i<currentScatternetLinks.length;i++){
       //console.log(currentScatternetLinks[i])
@@ -1056,7 +1085,7 @@ function filterDataAcrossViews(fromview){
 
     //segment view data filtering
     if(fromview==3){
-    var currentSegmentViewLinks = computeSegmentViewLinks();
+    var currentSegmentViewLinks = computeSegmentViewLinks(globalFilteredNodes);
     for(var i=0;i<currentSegmentViewLinks.length;i++){
       var company1Index = currentSegmentViewLinks[i]['source'];
       var company2Index = currentSegmentViewLinks[i]['target'];
@@ -1123,7 +1152,9 @@ function filterDataAcrossViews(fromview){
           }
           }//end of else for termination date present
         }//end of for loop
-    //end of segment view data filtering
+        //end of segment view data filtering
+        filteredSegmentViewNodes=globalFilteredNodes;
+
       }
   }//end of main else
 /*
@@ -1137,6 +1168,8 @@ function filterDataAcrossViews(fromview){
   console.log(filteredSegmentViewNodes)
   console.log(filteredSegmentViewLinks)
 */
+
+
 
 }//end of filterDataAcrossViews()
 
@@ -1246,10 +1279,10 @@ function pathViewMouseout(d) {
         .style("stroke", function(i){
           return colorLinkBasedOnNodes(i.source.sectorColor,i.target.sectorColor);
         })
-        .style("opacity", 1);
+        .style("opacity", 0.7);
 
   d3.selectAll(".pathviewnode").transition().duration(500)
-        .style("opacity", 1);
+        .style("opacity", 0.7);
 
   d3.select(this).select("circle").style("stroke","").style("stroke-width","");
 
@@ -1336,8 +1369,8 @@ function drawDetailedAlliances(company1,company2){
       selectedCount=0;
       d3.selectAll(".detailedalliance").remove();
       d3.selectAll(".tempDetailedAllianceLabel").remove();
+      calledFromDetailedView=1;
       drawPathView();
-      //filterPathView();
     })
     .append("text")
     .attr("class","tempDetailedAllianceLabel")
@@ -1362,6 +1395,7 @@ function drawDetailedAlliances(company1,company2){
       selectedCount=0;
       d3.selectAll(".detailedalliance").remove();
       d3.selectAll(".tempDetailedAllianceLabel").remove();
+      calledFromDetailedView=1;
       drawPathView();
       //filterPathView();
   });
@@ -1742,12 +1776,19 @@ function addLinkToPathView(currentLink,relationshipTypesToShow,showJV,showCB){
 }
 
 function drawPathView() {
-  filterDataAcrossViews(1);
+  if(calledFromDetailedView==1)
+  {
+    calledFromDetailedView=0;
+  }else{
+    filterDataAcrossViews(1);  
+  }
   pathViewActivated=1;
   linkedByIndex={};
   if(firstTime==0){
     force.gravity(0);
     force.stop();
+  }else{
+    force.gravity(0.1);
   }
   //filterPathView();
   d3.selectAll("svg").remove(); 
@@ -1947,6 +1988,57 @@ function drawPathView() {
 
 // scatternet specific code
 
+function companyExistsInNodeList(company,list){
+  for(var i=0;i<list.length;i++){
+    if(company==list[i]['name']){
+      return 1;
+    }
+  }return -1;
+}
+
+function computeScatternetLinks(nodes){
+  var scatternetLinks=[];
+    //console.log(globalLinks);
+    //console.log(globalNodes);
+    for(var i=0;i<nodes.length;i++){
+      for(var j=0;j<globalAllAlliances.length;j++){
+        if(globalAllAlliances[j]['company2']==nodes[i]['name']){
+          var sourceCompanyName = globalAllAlliances[j]['company1'];
+          var targetCompanyName = globalAllAlliances[j]['company2'];
+          var sourceIndex,targetIndex;
+          if(companyExistsInNodeList(sourceCompanyName,filteredSegmentViewNodes)!=-1 && companyExistsInNodeList(targetCompanyName,filteredSegmentViewNodes)!=-1){
+            sourceIndex = companyExistsInNodes(sourceCompanyName);
+            targetIndex = companyExistsInNodes(targetCompanyName);
+          }  
+          if(entryExistsInLinks({"source":sourceIndex,"target":targetIndex},scatternetLinks)==0){
+            scatternetLinks.push({"source":sourceIndex,"target":targetIndex});
+          }
+        }else if(globalAllAlliances[j]["company1"]==nodes[i]['name']){
+          var sourceCompanyName = globalAllAlliances[j]['company2'];
+          var targetCompanyName = globalAllAlliances[j]['company1'];
+          var sourceIndex,targetIndex;
+          if(companyExistsInNodeList(sourceCompanyName,filteredSegmentViewNodes)!=-1 && companyExistsInNodeList(targetCompanyName,filteredSegmentViewNodes)!=-1){
+            sourceIndex = companyExistsInNodes(sourceCompanyName);
+            targetIndex = companyExistsInNodes(targetCompanyName);
+          }          
+          
+          if(entryExistsInLinks({"source":sourceIndex,"target":targetIndex},scatternetLinks)==0){
+            scatternetLinks.push({"source":sourceIndex,"target":targetIndex});
+          }
+        }
+      }
+    }
+    //console.log(scatternetLinks);
+    var linksToSend=[];
+    for(var i=0;i<scatternetLinks.length;i++){
+      if(typeof(scatternetLinks[i]['source'])!='undefined' && typeof(scatternetLinks[i]['target'])!='undefined'){
+        linksToSend.push(scatternetLinks[i]);
+      }
+    }
+    return linksToSend;
+  
+}
+/*
 function computeScatternetLinks(){
     var scatternetLinks=[];
     //console.log(globalLinks);
@@ -1988,7 +2080,7 @@ function computeScatternetLinks(){
     }
     return linksToSend;
 }
-
+*/
 function addLinkToScatternet(currentlink,relationshipTypesToShow,showJV,showCB){        
         var allTypesInCurrentEdge,flag=0;
         var sourceCompany=getCompanyAtIndex(currentlink['source']);
@@ -2979,7 +3071,7 @@ function isAroundCentroid(x,y,sectorCentroids){
   }
   return 0;
 }
-
+/*
 function computeSegmentViewLinks(){
     var segmentViewLinks=[];
     //console.log(globalNodes.length);
@@ -3020,6 +3112,49 @@ var linksToSend=[];
     }
 return linksToSend;
 }
+*/
+function computeSegmentViewLinks(fornodes){
+    var segmentViewLinks=[];
+    //console.log(globalNodes.length);
+    for(var i=0;i<fornodes.length;i++){
+      for(var j=0;j<globalAllAlliances.length;j++){
+        if(globalAllAlliances[j]['company2']==fornodes[i]['name']){
+          var sourceCompanyName = globalAllAlliances[j]['company1'];
+          var targetCompanyName = globalAllAlliances[j]['company2'];
+          var sourceIndex,targetIndex;
+          if(companyExistsInNodeList(sourceCompanyName,filteredSegmentViewNodes)!=-1 && companyExistsInNodeList(targetCompanyName,filteredSegmentViewNodes)!=-1){
+            sourceIndex = companyExistsInNodes(sourceCompanyName);
+            targetIndex = companyExistsInNodes(targetCompanyName);
+          }  
+          if(entryExistsInLinks({"source":sourceIndex,"target":targetIndex},segmentViewLinks)==0){
+            segmentViewLinks.push({"source":sourceIndex,"target":targetIndex});
+          }
+        }else if(globalAllAlliances[j]["company1"]==fornodes[i]['name']){
+          var sourceCompanyName = globalAllAlliances[j]['company2'];
+          var targetCompanyName = globalAllAlliances[j]['company1'];
+          var sourceIndex,targetIndex;
+          if(companyExistsInNodeList(sourceCompanyName,filteredSegmentViewNodes)!=-1 && companyExistsInNodeList(targetCompanyName,filteredSegmentViewNodes)!=-1){
+            sourceIndex = companyExistsInNodes(sourceCompanyName);
+            targetIndex = companyExistsInNodes(targetCompanyName);
+          }          
+          
+          if(entryExistsInLinks({"source":sourceIndex,"target":targetIndex},segmentViewLinks)==0){
+            segmentViewLinks.push({"source":sourceIndex,"target":targetIndex});
+          }
+        }
+      }
+      
+}
+var linksToSend=[];
+    for(var i=0;i<segmentViewLinks.length;i++){
+      if(typeof(segmentViewLinks[i]['source'])!='undefined' && typeof(segmentViewLinks[i]['target'])!='undefined'){
+        linksToSend.push(segmentViewLinks[i]);
+      }
+    }
+return linksToSend;
+}
+
+
 function segmentViewZoomed(){
   if(firstMoveOnSegmentView==1){
     //console.log("in here")
