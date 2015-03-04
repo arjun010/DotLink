@@ -78,6 +78,10 @@ app.get('/scatter.html', function(request, response) {
   response.sendfile('main/scatter.html')
 })
 
+app.get('/scatterMatrix.html', function(request, response) {
+  response.sendfile('main/scatterMatrix.html')
+})
+
 app.get('/data/companies.json', function(request, response) {
   response.sendfile('main/data/companies.json')
 })
@@ -108,6 +112,10 @@ app.get('/script.js', function(request, response) {
 
 app.get('/js/scatternet.js', function(request, response) {
   response.sendfile('main/js/scatternet.js')
+})
+
+app.get('/js/scatterMatrix.js', function(request, response) {
+  response.sendfile('main//js/scatterMatrix.js')
 })
 
 app.get('/js/classie.js', function(request, response) {

@@ -23,7 +23,7 @@
         $.ajax({
             'async': false,
             'global': false,
-            'url': "data/companies.json",
+            'url': "data/companies_latest.json",
             'dataType': "json",
             'success': function (data) {
                 json = data;
@@ -173,6 +173,7 @@ select#yaxis{
     float:right;
     color:#27aae1;
 }
+
 .scatternet_x_axis {
     fill: none;
     stroke: #AAA;
@@ -207,6 +208,31 @@ select#yaxis{
   height: 28px;
   pointer-events: none;
 }
+
+
+.axis,
+.frame {
+  shape-rendering: crispEdges;
+}
+
+.axis line {
+  stroke: #ddd;
+}
+
+.axis path {
+  display: none;
+}
+
+.frame {
+  fill: none;
+  stroke: #aaa;
+}
+
+circle {
+  fill-opacity: .7;
+}
+
+
 
 /* scatternet end*/
 
@@ -290,7 +316,7 @@ select#yaxis{
 <div class="col-sm-2 cssmenu hide" id="filterPanel" style="height:100%;width=100%; background-color:#444444;">
 <ul>
   <li class='active'><p align="right" style="margin-top:7px;"><span class="glyphicon glyphicon-chevron-left menuClose" style="color:white;font-size:20px;margin-right:10px;"></span></p></li>
-  <li class="backToMenu"><a href='#'><span>back</span></a>
+  <!--<li class="backToMenu"><a href='#'><span>back</span></a>-->
   <li class='can-sub'><a href='#'><span><abbr title="None(default): company is gray if collapsed and blue if expanded
 By type: company is green if expanded else, blue if public and orange if private">Node Coloring</abbr></span></a>
     <ul>
@@ -381,6 +407,55 @@ By type: public->circles,
       </li>
     </ul>    
   </li>
+  <li class="can-sub"><a href="#"><span>Scatter Matrix attributes</span></a>
+    <ul>
+      <li>
+        <select style="width:100%;" id="matrixAttribute1" onchange="drawScatternetView()">
+          <option value="jvCount">Joint Venture Count</option>
+          <option value="cbAlliancesCount">Cross Border Alliances</option>          
+          <option value="rndAgreementsCount">R&D Agreements Count</option>
+          <option value="strategicAgreementsCount">Strategic Agreements Count</option>
+          <option value="supplyAgreementsCount">Supply Agreements Count</option>
+          <option value="marketingAgreementsCount">Marketing Agreements Count</option>
+          <option value="manufacturingAgreementsCount">Manufacturing Agreements Count</option>
+          <option value="techtransAgreementsCount">Techtrans Agreements Count</option>
+          <option value="oemAgreementsCount">OEM agreement Count</option>
+          <option value="licensingAgreementsCount">Licensing agreement Count</option>
+          <option value="totalAllianceCount">Alliance Count</option>
+        </select>
+      </li>
+      <li>
+        <select style="width:100%;" id="matrixAttribute2" onchange="drawScatternetView()">
+          <option value="strategicAgreementsCount">Strategic Agreements Count</option>
+          <option value="cbAlliancesCount">Cross Border Alliances</option>
+          <option value="jvCount">Joint Venture Count</option>
+          <option value="rndAgreementsCount">R&D Agreements Count</option>          
+          <option value="supplyAgreementsCount">Supply Agreements Count</option>
+          <option value="marketingAgreementsCount">Marketing Agreements Count</option>
+          <option value="manufacturingAgreementsCount">Manufacturing Agreements Count</option>
+          <option value="techtransAgreementsCount">Techtrans Agreements Count</option>
+          <option value="oemAgreementsCount">OEM agreement Count</option>
+          <option value="licensingAgreementsCount">Licensing agreement Count</option>
+          <option value="totalAllianceCount">Alliance Count</option>
+        </select>
+      </li>
+      <li>
+        <select style="width:100%;" id="matrixAttribute3" onchange="drawScatternetView()">
+          <option value="totalAllianceCount">Alliance Count</option>
+          <option value="cbAlliancesCount">Cross Border Alliances</option>
+          <option value="jvCount">Joint Venture Count</option>
+          <option value="rndAgreementsCount">R&D Agreements Count</option>
+          <option value="strategicAgreementsCount">Strategic Agreements Count</option>
+          <option value="supplyAgreementsCount">Supply Agreements Count</option>
+          <option value="marketingAgreementsCount">Marketing Agreements Count</option>
+          <option value="manufacturingAgreementsCount">Manufacturing Agreements Count</option>
+          <option value="techtransAgreementsCount">Techtrans Agreements Count</option>
+          <option value="oemAgreementsCount">OEM agreement Count</option>
+          <option value="licensingAgreementsCount">Licensing agreement Count</option>
+        </select>
+      </li>
+    </ul>    
+  </li>
 </ul>
 </div><!--end of filterPanel-->        
 
@@ -444,13 +519,14 @@ By type: public->circles,
         <div class="ui-widget" align="right" style="margin-right:80px;">
             <span class="fa fa-search" style="font-size:20px;"></span>&nbsp;&nbsp;&nbsp;<input id="search" onkeyup="searchNode();" placeholder="Search in network">
         </div>
+        <!--
         <select id="yaxis" class="hide" onchange="drawScatternetView()">
             <option value="allianceCount">Alliance Count</option>
             <option value="highPrice">High Price</option>
             <option value="companySize">Company Size</option>
-        </select>
+        </select>-->
 
-        <div id="viz" style="width:100%;height:90%;">        
+        <div id="viz" style="width:100%;height:90%;" align="center">        
         </div>
         <p id="spinner" align="center"><span style="font-size:25px;" class="fa fa-spinner fa-spin"></span></p>
 
@@ -471,13 +547,13 @@ By type: public->circles,
             <li id="scatternetpill">ScatterNet</li>  
           </ul>
         </div>-->
-        <div class="hide" id="scatternetaxis" align="center">
+        <!--<div class="hide" id="scatternetaxis" align="center">
             <select id="xaxis" class="hide" onchange="drawScatternetView()">
               <option value="allianceCount">Alliance Count</option>
               <option value="highPrice">High Price</option>
               <option value="companySize">Company Size</option>
             </select>
-        </div>
+        </div>-->
         <div id="vizoptionsdiv" align="left">
           <button id="cleardata" onclick="refreshData()">Refresh data</button>
         </div>
@@ -578,7 +654,8 @@ $('#menuShow').click(function (e) {
     //$("#panelContent").addClass("hide");
     //$("#panelContent").hide();
     
-    $("#mainmenu").removeClass("hide");
+    //$("#mainmenu").removeClass("hide");
+    $("#filterPanel").removeClass("hide");
 
     $("#mainContent").removeClass("col-sm-12");
     $("#mainContent").addClass("col-sm-10");
@@ -855,6 +932,33 @@ function newAdditionChanged(){
 <script type="text/javascript" src="js/scatternet_test.js"></script>
 <script type="text/javascript" src="js/new1.js"></script>
 -->
-<script type="text/javascript" src="js/newWithCommonFilter.js"></script>
+<script type="text/javascript" src="js/scatterMatrix.js"></script>
+<!--
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="width:2000px;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+      </div>
+      <div class="modal-body">
+      </div>      
+    </div>
+  </div>
+</div>
+-->
+<dialog id="modal-body" style="width:100%;height:90%;">
+<div class="ui-widget" align="right" style="margin-right:80px;">
+<span class="fa fa-search" style="font-size:20px;"></span>&nbsp;&nbsp;&nbsp;<input id="searchscatternet" onkeyup="searchNodeInScatterNet();" placeholder="Search in scatternet">&nbsp;&nbsp;&nbsp;<span class="fa fa-times" id="closescatternetmodal" style="font-size:20px;"></span>
+</div>
+</dialog>
+<script type="text/javascript">
+  function closeModal(){
+    document.getElementById("modal-body").close(); 
+  }
+  $("#closescatternetmodal").click(function (e) {
+    closeModal();
+  });
+</script>
 </body>
 </html>

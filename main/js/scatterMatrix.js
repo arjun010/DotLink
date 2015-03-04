@@ -36,16 +36,15 @@ function returnMax(list){
   return max;
 }
 
-function getEffectiveQuarterOfAlliancesBetweenCompanies(company1,company2){
-  var list = [];
+function getEffectiveQuarterOfAlliancesBetweenCompanies(company1,company2,effectiveYear){
   for(var i=0;i<globalAllAlliances.length;i++){
     if((globalAllAlliances[i]['company1']==company1 && globalAllAlliances[i]['company2']==company2) || (globalAllAlliances[i]['company1']==company2 && globalAllAlliances[i]['company2']==company1)){
-      if(parseInt(globalAllAlliances[i]['effectivequarter'])!=-1){
-        list.push(parseInt(globalAllAlliances[i]['effectivequarter']));
+      if(parseInt(globalAllAlliances[i]['effectiveyear'])==effectiveYear){
+        return parseInt(globalAllAlliances[i]['effectivequarter']);
       }
     }
   }
-  return returnMin(list);
+  return -1;
 }
 
 function getEffectiveYearOfAlliancesBetweenCompanies(company1,company2){
@@ -54,7 +53,7 @@ function getEffectiveYearOfAlliancesBetweenCompanies(company1,company2){
     if((globalAllAlliances[i]['company1']==company1 && globalAllAlliances[i]['company2']==company2) || (globalAllAlliances[i]['company1']==company2 && globalAllAlliances[i]['company2']==company1)){
       if(parseInt(globalAllAlliances[i]['effectiveyear'])!=-1){
         list.push(parseInt(globalAllAlliances[i]['effectiveyear']));
-      }      
+      }  
     }
   }
   return returnMin(list);
@@ -64,7 +63,7 @@ function getTerminatedQuarterOfAlliancesBetweenCompanies(company1,company2){
   var list = [];
   for(var i=0;i<globalAllAlliances.length;i++){
     if((globalAllAlliances[i]['company1']==company1 && globalAllAlliances[i]['company2']==company2) || (globalAllAlliances[i]['company1']==company2 && globalAllAlliances[i]['company2']==company1)){
-      list.push(parseInt(globalAllAlliances[i]['terminatedquarter']));
+      list.push(globalAllAlliances[i]['terminatedquarter']);
     }
   }
   return returnMax(list);
@@ -74,7 +73,7 @@ function getTerminatedYearOfAlliancesBetweenCompanies(company1,company2){
   var list = [];
   for(var i=0;i<globalAllAlliances.length;i++){
     if((globalAllAlliances[i]['company1']==company1 && globalAllAlliances[i]['company2']==company2) || (globalAllAlliances[i]['company1']==company2 && globalAllAlliances[i]['company2']==company1)){
-      list.push(parseInt(globalAllAlliances[i]['terminatedyear']));
+      list.push(globalAllAlliances[i]['terminatedyear']);
     }
   }
   return returnMax(list);
@@ -160,6 +159,14 @@ $("#newCompany").autocomplete({
 
 
 function searchNode() {
+  var color = function(sector){
+  if (sector=="Hardware Equipment") {return "#DC3912"; }
+  else if(sector=="Hardware Components") {return "#3366CC";}
+  else if(sector=="Software") {return "#FF9900";}
+  else if(sector=="Telecommunications") {return "#109618";}
+  else if(sector=="Media") {return "#990099";}
+  else {return "#77777E";}
+  };
     var selectedVal = document.getElementById('search').value.toLowerCase();
     if(view==3){
       segmentViewSearch(selectedVal);
@@ -194,6 +201,9 @@ function searchNode() {
             });
           }
     });
+    d3.selectAll(".datapoint").style("opacity",0.9).style("fill",function(d){
+      return color(d.sector);
+    });
     }
     else{
     var selectedNode;
@@ -214,7 +224,7 @@ function searchNode() {
         .text(function() { return d.name;});
       }
       else{
-        d3.select(this).style("opacity",0.05);
+        d3.select(this).style("opacity",0.3);
           if($('#coloring').val()=="bytype"){
             d3.select(this).attr("fill",function(d){
               return isExpanded(d.name)==1? "#000000" : (d.type=="public"?"#088A08":"#FF8000");
@@ -231,7 +241,64 @@ function searchNode() {
       }
     });
     if(view==2){
+      allNodesOnScreen = d3.selectAll(".datapoint")
+    .each(function(d) {
+      if(d.companyname!="" && d.companyname.toLowerCase().indexOf(selectedVal) > -1)
+      {
+        d3.select(this).style("opacity",0.9);
+        /*
+        if(isExpanded(d.companyname)!=1){
+          d3.select(this).append("text")
+          .attr("class","searchLabel")
+          .attr("fill","black")
+          .attr("dx", 12)
+          .attr("dy", ".35em")
+          .attr("style", "font-family:sans-serif;")
+          .attr("style", function(d){
+            var size = (((20-8)*(getNumberOfAlliances(d.name))))/(767)+8;
+            return "font-size:"+size; 
+          })
+          .text(function() { return d.name;});
+        }*/
+      }
+      else{
+        d3.select(this).style("opacity",0.1).style("fill","#ccc");
+      }
+    });
+    }
+    }
+    }
+}
+
+
+function searchNodeInScatterNet(){
+  var selectedVal = document.getElementById('searchscatternet').value.toLowerCase();    
+    var allNodesOnScreen ;
+    
+    d3.selectAll(".searchLabel").remove();
+
+    if (selectedVal=="") {
       allNodesOnScreen = d3.selectAll(".scatternetnode")
+    .each(function(d) {
+          d3.select(this).style("opacity",1);
+          if($('#coloring').val()=="bytype"){
+            d3.select(this).attr("fill",function(d){
+              return isExpanded(d.name)==1? "#000000" : (d.type=="public"?"#088A08":"#FF8000");
+            });
+          }else if($('#coloring').val()=="bysector"){
+            d3.select(this).attr("fill",function(d){
+              return colorBasedOnSector(d.sectorColor);//isExpanded(d.name)==1? "#000000" : (d.type=="public"?"#088A08":"#FF8000");
+            });
+          }
+          else{
+            d3.select(this).attr("fill",function(d){
+              return isExpanded(d.name)==1? "#000000" : "#77777E";
+            });
+          }
+    });    
+    }
+    else{
+    allNodesOnScreen = d3.selectAll(".scatternetnode")
     .each(function(d) {
       if(d.name!="" && d.name.toLowerCase().indexOf(selectedVal) > -1)
       {
@@ -249,11 +316,13 @@ function searchNode() {
           .text(function() { return d.name;});
         }
       }
+      else{
+        d3.select(this).style("opacity",0.1);
+      }
     });
     }
-    }
-    }
 }
+
 
 function unique(list) {
     var result = [];
@@ -317,7 +386,88 @@ function getCompanySize(forCompany){
       if(globalAllCompanies[i]['name']==forCompany){
         return globalAllCompanies[i]['companySize'];
       }
-    } 
+  } 
+}
+
+function getCompanyJvCount(forCompany){
+  for (var i = 0; i < globalAllCompanies.length; i++){
+      if(globalAllCompanies[i]['name']==forCompany){
+        return globalAllCompanies[i]['jvCount'];
+      }
+  }
+}
+
+function getCompanyCbAlliancesCount(forCompany){
+  for (var i = 0; i < globalAllCompanies.length; i++){
+      if(globalAllCompanies[i]['name']==forCompany){
+        return globalAllCompanies[i]['cbAlliancesCount'];
+      }
+  }
+}
+
+
+function getCompanyRnDAlliancesCount(forCompany){
+  for (var i = 0; i < globalAllCompanies.length; i++){
+      if(globalAllCompanies[i]['name']==forCompany){
+        return globalAllCompanies[i]['rndAgreementsCount'];
+      }
+  }
+}
+
+function getCompanyStrategicAlliancesCount(forCompany){
+  for (var i = 0; i < globalAllCompanies.length; i++){
+      if(globalAllCompanies[i]['name']==forCompany){
+        return globalAllCompanies[i]['strategicAgreementsCount'];
+      }
+  }
+}
+
+function getCompanySupplyAlliancesCount(forCompany){
+  for (var i = 0; i < globalAllCompanies.length; i++){
+      if(globalAllCompanies[i]['name']==forCompany){
+        return globalAllCompanies[i]['supplyAgreementsCount'];
+      }
+  }  
+}
+
+function getCompanyMarketingAlliancesCount(forCompany){
+  for (var i = 0; i < globalAllCompanies.length; i++){
+      if(globalAllCompanies[i]['name']==forCompany){
+        return globalAllCompanies[i]['marketingAgreementsCount'];
+      }
+  } 
+}
+
+function getCompanyManufacturingAlliancesCount(forCompany){
+  for (var i = 0; i < globalAllCompanies.length; i++){
+      if(globalAllCompanies[i]['name']==forCompany){
+        return globalAllCompanies[i]['manufacturingAgreementsCount'];
+      }
+  } 
+}
+
+function getCompanyTechTransAlliancesCount(forCompany){
+  for (var i = 0; i < globalAllCompanies.length; i++){
+      if(globalAllCompanies[i]['name']==forCompany){
+        return globalAllCompanies[i]['techtransAgreementsCount'];
+      }
+  }
+}
+
+function getCompanyOemAlliancesCount(forCompany){
+  for (var i = 0; i < globalAllCompanies.length; i++){
+      if(globalAllCompanies[i]['name']==forCompany){
+        return globalAllCompanies[i]['oemAgreementsCount'];
+      }
+  } 
+}
+
+function getCompanyLicensingAlliancesCount(forCompany){
+  for (var i = 0; i < globalAllCompanies.length; i++){
+      if(globalAllCompanies[i]['name']==forCompany){
+        return globalAllCompanies[i]['licensingAgreementsCount'];
+      }
+  }
 }
 
 function getSectorDesc(forCompany){
@@ -491,7 +641,7 @@ function addNewNode(callback){
     var companyToAdd = document.getElementById("newCompany");
     if(companyToAdd.value!=""){
     if(companyExistsInNodes(companyToAdd)==-1){
-      globalNodes.push(({"name":companyToAdd.value,"highPrice":getHighPrice(companyToAdd.value),"allianceCount":getAllianceCount(companyToAdd.value),"companySize":getCompanySize(companyToAdd.value),"expanded":"false","selected":"false","type":getCompanyType(companyToAdd.value),"sectorColor":getSectorColor(companyToAdd.value),"allSectors":getAllSectors(companyToAdd.value)}));
+      globalNodes.push(({"name":companyToAdd.value,"highPrice":getHighPrice(companyToAdd.value),"allianceCount":getAllianceCount(companyToAdd.value),"companySize":getCompanySize(companyToAdd.value),"expanded":"false","selected":"false","type":getCompanyType(companyToAdd.value),"sectorColor":getSectorColor(companyToAdd.value),"allSectors":getAllSectors(companyToAdd.value),"sector":getSector(companyToAdd.value),"jvCount":getCompanyJvCount(companyToAdd.value),"cbAlliancesCount":getCompanyCbAlliancesCount(companyToAdd.value),"rndAgreementsCount":getCompanyRnDAlliancesCount(companyToAdd.value),"strategicAgreementsCount":getCompanyStrategicAlliancesCount(companyToAdd.value),"supplyAgreementsCount":getCompanySupplyAlliancesCount(companyToAdd.value),"marketingAgreementsCount":getCompanyMarketingAlliancesCount(companyToAdd.value),"manufacturingAgreementsCount":getCompanyManufacturingAlliancesCount(companyToAdd.value),"techtransAgreementsCount":getCompanyTechTransAlliancesCount(companyToAdd.value),"oemAgreementsCount":getCompanyOemAlliancesCount(companyToAdd.value),"licensingAgreementsCount":getCompanyLicensingAlliancesCount(companyToAdd.value)}));
         var sourceVal,targetVal;
         for(var i = 0; i < globalAllAlliances.length; i++){
             // to check if the new company is a target node for any alliance
@@ -537,6 +687,7 @@ function addNewNode(callback){
   if(view==1){
     drawPathView();
   }else if(view==2){
+    //document.getElementById("modal-body").close(); 
     drawScatternetView();
   }else if(view==3){
     existingXYPairs=[];
@@ -567,7 +718,7 @@ function addPartners(companyToAdd,callback){
             sourceVal = companyExistsInNodes(globalAllAlliances[i]['company1']);
             targetVal = companyExistsInNodes(globalAllAlliances[i]['company2']);
             if(targetVal==-1){
-                globalNodes.push(({"name":globalAllAlliances[i]['company2'],"highPrice":getHighPrice(globalAllAlliances[i]['company2']),"allianceCount":getAllianceCount(globalAllAlliances[i]['company2']),"companySize":getCompanySize(globalAllAlliances[i]['company2']),"expanded":"false","selected":"false","type":getCompanyType(globalAllAlliances[i]['company2']),"sectorColor":getSectorColor(globalAllAlliances[i]['company2']),"allSectors":getAllSectors(globalAllAlliances[i]['company2'])}));
+                globalNodes.push(({"name":globalAllAlliances[i]['company2'],"highPrice":getHighPrice(globalAllAlliances[i]['company2']),"allianceCount":getAllianceCount(globalAllAlliances[i]['company2']),"companySize":getCompanySize(globalAllAlliances[i]['company2']),"expanded":"false","selected":"false","type":getCompanyType(globalAllAlliances[i]['company2']),"sectorColor":getSectorColor(globalAllAlliances[i]['company2']),"allSectors":getAllSectors(globalAllAlliances[i]['company2']),"sector":getSector(globalAllAlliances[i]['company2']),"jvCount":getCompanyJvCount(globalAllAlliances[i]['company2']),"cbAlliancesCount":getCompanyCbAlliancesCount(globalAllAlliances[i]['company2']),"rndAgreementsCount":getCompanyRnDAlliancesCount(globalAllAlliances[i]['company2']),"strategicAgreementsCount":getCompanyStrategicAlliancesCount(globalAllAlliances[i]['company2']),"supplyAgreementsCount":getCompanySupplyAlliancesCount(globalAllAlliances[i]['company2']),"marketingAgreementsCount":getCompanyMarketingAlliancesCount(globalAllAlliances[i]['company2']),"manufacturingAgreementsCount":getCompanyManufacturingAlliancesCount(globalAllAlliances[i]['company2']),"techtransAgreementsCount":getCompanyTechTransAlliancesCount(globalAllAlliances[i]['company2']),"oemAgreementsCount":getCompanyOemAlliancesCount(globalAllAlliances[i]['company2']),"licensingAgreementsCount":getCompanyLicensingAlliancesCount(globalAllAlliances[i]['company2'])}));
                 targetVal = companyExistsInNodes(globalAllAlliances[i]['company2']);
                 if(linkIsInList({"source":sourceVal,"target":targetVal},globalLinks)==-1){
                     globalLinks.push({"source":sourceVal,"target":targetVal});
@@ -583,7 +734,7 @@ function addPartners(companyToAdd,callback){
           targetVal = companyExistsInNodes(globalAllAlliances[i]['company2']);
           sourceVal = companyExistsInNodes(globalAllAlliances[i]['company1']);
           if(sourceVal==-1){
-                globalNodes.push(({"name":globalAllAlliances[i]['company1'],"highPrice":getHighPrice(globalAllAlliances[i]['company1']),"allianceCount":getAllianceCount(globalAllAlliances[i]['company1']),"companySize":getCompanySize(globalAllAlliances[i]['company1']),"expanded":"false","selected":"false","type":getCompanyType(globalAllAlliances[i]['company1']),"sectorColor":getSectorColor(globalAllAlliances[i]['company1']),"allSectors":getAllSectors(globalAllAlliances[i]['company1'])}));
+                globalNodes.push(({"name":globalAllAlliances[i]['company1'],"highPrice":getHighPrice(globalAllAlliances[i]['company1']),"allianceCount":getAllianceCount(globalAllAlliances[i]['company1']),"companySize":getCompanySize(globalAllAlliances[i]['company1']),"expanded":"false","selected":"false","type":getCompanyType(globalAllAlliances[i]['company1']),"sectorColor":getSectorColor(globalAllAlliances[i]['company1']),"allSectors":getAllSectors(globalAllAlliances[i]['company1']),"sector":getSector(globalAllAlliances[i]['company1']),"jvCount":getCompanyJvCount(globalAllAlliances[i]['company1']),"cbAlliancesCount":getCompanyCbAlliancesCount(globalAllAlliances[i]['company1']),"rndAgreementsCount":getCompanyRnDAlliancesCount(globalAllAlliances[i]['company1']),"strategicAgreementsCount":getCompanyStrategicAlliancesCount(globalAllAlliances[i]['company1']),"supplyAgreementsCount":getCompanySupplyAlliancesCount(globalAllAlliances[i]['company1']),"marketingAgreementsCount":getCompanyMarketingAlliancesCount(globalAllAlliances[i]['company1']),"manufacturingAgreementsCount":getCompanyManufacturingAlliancesCount(globalAllAlliances[i]['company1']),"techtransAgreementsCount":getCompanyTechTransAlliancesCount(globalAllAlliances[i]['company1']),"oemAgreementsCount":getCompanyOemAlliancesCount(globalAllAlliances[i]['company1']),"licensingAgreementsCount":getCompanyLicensingAlliancesCount(globalAllAlliances[i]['company1'])}));
                 sourceVal = companyExistsInNodes(globalAllAlliances[i]['company1']);
                 if(linkIsInList({"source":sourceVal,"target":targetVal},globalLinks)==-1){
                   globalLinks.push({"source":sourceVal,"target":targetVal});
@@ -597,7 +748,7 @@ function addPartners(companyToAdd,callback){
 
         }
     }
-    
+
   updateoptArr();
   if(view==1){
     fromAddPartners=1;
@@ -611,6 +762,7 @@ function addPartners(companyToAdd,callback){
     }
     drawPathView();    
   }else if(view==2){
+    document.getElementById("modal-body").close(); 
     drawScatternetView();
   }else if(view==3){
     drawSegmentView();
@@ -662,6 +814,7 @@ function removePartners(forCompany,callback){
   if(view==1){
     drawPathView();
   }else if(view==2){
+    document.getElementById("modal-body").close(); 
     drawScatternetView();
   }else if(view==3){
     drawSegmentView();
@@ -731,6 +884,7 @@ function filterToggled(){
   if(view==1){
     drawPathView();
   }else if(view==2){
+    //document.getElementById("modal-body").close(); 
     drawScatternetView();    
   }else if(view==3){
     drawSegmentView();
@@ -862,9 +1016,6 @@ function filterDataAcrossViews(fromview){
     if($("#showstrategic").is(":checked")){
       relationshipTypesToShow.push("Strategic");
     }
-    if($("#showstrategic").is(":checked")){
-      relationshipTypesToShow.push("Strategic");
-    }
     if($("#showsupply").is(":checked")){
       relationshipTypesToShow.push("Supply");
     }
@@ -886,10 +1037,11 @@ function filterDataAcrossViews(fromview){
       var company2 = getCompanyAtIndex(company2Index);
       var company1Name = company1['name'];
       var company2Name = company2['name'];      
-      var linkEffQuarter = getEffectiveQuarterOfAlliancesBetweenCompanies(company1Name,company2Name);
+      var linkEffYear = getEffectiveYearOfAlliancesBetweenCompanies(company1Name,company2Name);
+      var linkEffQuarter = getEffectiveQuarterOfAlliancesBetweenCompanies(company1Name,company2Name,parseInt(linkEffYear));
       var linkTerminatedQuarter = getTerminatedQuarterOfAlliancesBetweenCompanies(company1Name,company2Name);
       var linkTerminatedYear = getTerminatedYearOfAlliancesBetweenCompanies(company1Name,company2Name);
-      var linkEffYear = getEffectiveYearOfAlliancesBetweenCompanies(company1Name,company2Name);
+      
       //console.log(linkEffQuarter,linkEffYear,linkTerminatedQuarter,linkTerminatedYear)
       if(linkEffYear!=-1){
             if(linkEffYear<effYear){              
@@ -968,7 +1120,6 @@ function filterDataAcrossViews(fromview){
             }
           }
           }//end of else for termination date present*/
-        
         }//end of for loop
         //end of pathviewactivated==0
     }else{
@@ -977,10 +1128,11 @@ function filterDataAcrossViews(fromview){
       var company2 = globalLinks[i]['target'];      
       var company1Name = company1['name'];
       var company2Name = company2['name'];      
-      var linkEffQuarter = getEffectiveQuarterOfAlliancesBetweenCompanies(company1Name,company2Name);
+      var linkEffYear = getEffectiveYearOfAlliancesBetweenCompanies(company1Name,company2Name);
+      var linkEffQuarter = getEffectiveQuarterOfAlliancesBetweenCompanies(company1Name,company2Name,parseInt(linkEffYear));
       var linkTerminatedQuarter = getTerminatedQuarterOfAlliancesBetweenCompanies(company1Name,company2Name);
       var linkTerminatedYear = getTerminatedYearOfAlliancesBetweenCompanies(company1Name,company2Name);
-      var linkEffYear = getEffectiveYearOfAlliancesBetweenCompanies(company1Name,company2Name);
+      
       //console.log(linkEffQuarter,linkEffYear,linkTerminatedQuarter,linkTerminatedYear)
       if(linkEffYear!=-1){
             if(linkEffYear<effYear){              
@@ -1105,11 +1257,11 @@ function filterDataAcrossViews(fromview){
       var company2 = getCompanyAtIndex(company2Index);
       var company1Name = company1['name'];
       var company2Name = company2['name'];
-      var linkEffQuarter = getEffectiveQuarterOfAlliancesBetweenCompanies(company1Name,company2Name);
+      var linkEffYear = getEffectiveYearOfAlliancesBetweenCompanies(company1Name,company2Name);  
+      var linkEffQuarter = getEffectiveQuarterOfAlliancesBetweenCompanies(company1Name,company2Name,parseInt(linkEffYear));
       var linkTerminatedQuarter = getTerminatedQuarterOfAlliancesBetweenCompanies(company1Name,company2Name);
       var linkTerminatedYear = getTerminatedYearOfAlliancesBetweenCompanies(company1Name,company2Name);
-      var linkEffYear = getEffectiveYearOfAlliancesBetweenCompanies(company1Name,company2Name);  
-
+      
       //console.log(linkEffQuarter,linkEffYear,linkTerminatedQuarter,linkTerminatedYear)
       if(linkEffYear!=-1){
             if(linkEffYear<effYear){              
@@ -1209,10 +1361,11 @@ function filterDataAcrossViews(fromview){
       var company2 = getCompanyAtIndex(company2Index);
       var company1Name = company1['name'];
       var company2Name = company2['name'];
-      var linkEffQuarter = getEffectiveQuarterOfAlliancesBetweenCompanies(company1Name,company2Name);
+      var linkEffYear = getEffectiveYearOfAlliancesBetweenCompanies(company1Name,company2Name);  
+      var linkEffQuarter = getEffectiveQuarterOfAlliancesBetweenCompanies(company1Name,company2Name,parseInt(linkEffYear));
       var linkTerminatedQuarter = getTerminatedQuarterOfAlliancesBetweenCompanies(company1Name,company2Name);
       var linkTerminatedYear = getTerminatedYearOfAlliancesBetweenCompanies(company1Name,company2Name);
-      var linkEffYear = getEffectiveYearOfAlliancesBetweenCompanies(company1Name,company2Name);  
+      
       //console.log(linkEffQuarter,linkEffYear,linkTerminatedQuarter,linkTerminatedYear)          
       if(linkEffYear!=-1){
             if(linkEffYear<effYear){              
@@ -1490,6 +1643,83 @@ function getDetailedAlliances(company1,company2){
   //console.log(res)
   return res;
 }
+
+function getTypesInAlliance(company1,company2,effYear,effQuarter){
+  for(var i=0;i<globalDetailedAlliances.length;i++){
+    if((globalDetailedAlliances[i]['source']==company1 && globalDetailedAlliances[i]['target']==company2) || (globalDetailedAlliances[i]['source']==company2 && globalDetailedAlliances[i]['target']==company1)){
+      var effectiveDate = globalDetailedAlliances[i]['effective'];
+      var effectiveYear,effectiveMonth,effectiveQuarter;
+      if(effectiveDate!=""){
+        effectiveYear = parseInt(effectiveDate.split("/")[2]);
+        effectiveMonth = parseInt(effectiveDate.split("/")[0]);
+        if (effectiveMonth>=1 && effectiveMonth<=3){
+          effectiveQuarter = 1;
+        }else if (effectiveMonth>=4 && effectiveMonth<=6){
+          effectiveQuarter = 2;
+        }else if (effectiveMonth>=7 && effectiveMonth<=9){
+          effectiveQuarter = 3;
+        }else if (effectiveMonth>=10 && effectiveMonth<=12){
+          effectiveQuarter = 4;
+        }
+      }
+      if((effYear==effectiveYear) && (effQuarter==effectiveQuarter)){
+        return globalDetailedAlliances[i]['type'];
+      }
+    }
+  }
+}
+
+function isCrossBorderAlliance(company1,company2,effYear,effQuarter){
+  for(var i=0;i<globalDetailedAlliances.length;i++){
+    if((globalDetailedAlliances[i]['source']==company1 && globalDetailedAlliances[i]['target']==company2) || (globalDetailedAlliances[i]['source']==company2 && globalDetailedAlliances[i]['target']==company1)){
+      var effectiveDate = globalDetailedAlliances[i]['effective'];
+      var effectiveYear,effectiveMonth,effectiveQuarter;
+      if(effectiveDate!=""){
+        effectiveYear = parseInt(effectiveDate.split("/")[2]);
+        effectiveMonth = parseInt(effectiveDate.split("/")[0]);
+        if (effectiveMonth>=1 && effectiveMonth<=3){
+          effectiveQuarter = 1;
+        }else if (effectiveMonth>=4 && effectiveMonth<=6){
+          effectiveQuarter = 2;
+        }else if (effectiveMonth>=7 && effectiveMonth<=9){
+          effectiveQuarter = 3;
+        }else if (effectiveMonth>=10 && effectiveMonth<=12){
+          effectiveQuarter = 4;
+        }
+      }
+      if((effYear==effectiveYear) && (effQuarter==effectiveQuarter)){
+        return globalDetailedAlliances[i]['type'];
+      }
+    }
+  }
+}
+
+function isJointVenture(company1,company2,effYear,effQuarter){
+  for(var i=0;i<globalDetailedAlliances.length;i++){
+    if((globalDetailedAlliances[i]['source']==company1 && globalDetailedAlliances[i]['target']==company2) || (globalDetailedAlliances[i]['source']==company2 && globalDetailedAlliances[i]['target']==company1)){
+      var effectiveDate = globalDetailedAlliances[i]['effective'];
+      var effectiveYear,effectiveMonth,effectiveQuarter;
+      if(effectiveDate!=""){
+        effectiveYear = parseInt(effectiveDate.split("/")[2]);
+        effectiveMonth = parseInt(effectiveDate.split("/")[0]);
+        if (effectiveMonth>=1 && effectiveMonth<=3){
+          effectiveQuarter = 1;
+        }else if (effectiveMonth>=4 && effectiveMonth<=6){
+          effectiveQuarter = 2;
+        }else if (effectiveMonth>=7 && effectiveMonth<=9){
+          effectiveQuarter = 3;
+        }else if (effectiveMonth>=10 && effectiveMonth<=12){
+          effectiveQuarter = 4;
+        }
+      }
+      if((effYear==effectiveYear) && (effQuarter==effectiveQuarter)){
+        return globalDetailedAlliances[i]['type'];
+      }
+    }
+  }
+}
+
+
 function drawDetailedAlliances(company1,company2){
   d3.selectAll(".pathviewnode").selectAll("circle").style("stroke","").style("stroke-width","");
   d3.selectAll(".pathviewnode")
@@ -1560,19 +1790,190 @@ function drawDetailedAlliances(company1,company2){
 
   var detailedalliances = getDetailedAlliances(company1,company2);
   //console.log(detailedalliances);
+  //console.log(detailedalliances);
   var totalLinkCount = detailedalliances.length;
   var scaleFunc = d3.scale.linear().domain([1,totalLinkCount]).range([1,totalLinkCount+20]);    
   /*for(var i =0; i<totalLinkCount;i++){
     //console.log(scaleFunc(detailedalliances[i]['allianceIndex']));
     //detailedalliances[i]['allianceIndex']=scaleFunc(detailedalliances[i]['allianceIndex']);
   }*/
+  var relationshipTypesToShow = [],showCB=0,showJV=0;
+  if($("#showrnd").is(":checked")){
+    relationshipTypesToShow.push("R&D");
+  }
+  if($("#showmanufacturing").is(":checked")){
+    relationshipTypesToShow.push("Manufacturing");
+  }
+  if($("#showoem").is(":checked")){
+    relationshipTypesToShow.push("OEM");
+  }
+  if($("#showlicensing").is(":checked")){
+    relationshipTypesToShow.push("Licensing");
+  }
+  if($("#showtechtrans").is(":checked")){
+    relationshipTypesToShow.push("Techtrans");
+  }
+  if($("#showmarketing").is(":checked")){
+    relationshipTypesToShow.push("Marketing");
+  }
+  if($("#showstrategic").is(":checked")){
+    relationshipTypesToShow.push("Strategic");
+  }
+  if($("#showsupply").is(":checked")){
+    relationshipTypesToShow.push("Supply");
+  }
+  if($("#showcrossborder").is(":checked")){
+    showCB=1;
+  }
+  if($("#showjointventure").is(":checked")){
+    showJV=1;
+  }
+
+  
+
+  var effQuarter = parseInt($("#effquarter").val());
+  var endQuarter = parseInt($("#endquarter").val());
+  var effYear = parseInt($("#effyear").val());
+  var endYear = parseInt($("#endyear").val());
+  
+
+
   var detailedLinks = pathViewContainer.selectAll(".detailedalliance")
       .data(detailedalliances)
       .enter()
       .append("path")
       .attr("d", "M0,-5L10,0L0,5")
       .attr("class", "detailedalliance")
-      .style("opacity",0.7);
+      .style("opacity",function(d){
+        if((d.source==company1 && d.target==company2) || (d.source==company2 && d.target==company1)){
+          var effectiveDate = d.effective;
+    var effectiveYear,effectiveMonth,effectiveQuarter;
+    if(effectiveDate!=""){
+      effectiveYear = parseInt(effectiveDate.split("/")[2]);
+      effectiveMonth = parseInt(effectiveDate.split("/")[0]);
+      if (effectiveMonth>=1 && effectiveMonth<=3){
+        effectiveQuarter = 1;
+      }else if (effectiveMonth>=4 && effectiveMonth<=6){
+        effectiveQuarter = 2;
+      }else if (effectiveMonth>=7 && effectiveMonth<=9){
+        effectiveQuarter = 3;
+      }else if (effectiveMonth>=10 && effectiveMonth<=12){
+        effectiveQuarter = 4;
+      }
+    }
+    var currentAllianceHasTypes = getTypesInAlliance(company1,company2,effectiveYear,effectiveQuarter);
+    var currentAllianceIsJV = isJointVenture(company1,company2,effectiveYear,effectiveQuarter);
+    var currentAllianceIsCB = isCrossBorderAlliance(company1,company2,effectiveYear,effectiveQuarter);
+    if(effectiveYear<effYear){
+      //return 0.7;
+      for(var i=0;i<relationshipTypesToShow.length;i++){
+        if(objectIsInList(relationshipTypesToShow[i],currentAllianceHasTypes)==1){
+          return 0.7;
+        }
+      }
+      if(showJV==1){
+        if(currentAllianceIsJV=="true"){
+          return 0.7;
+        }
+      }
+      if(showCB==1){
+        if(currentAllianceIsCB=="true"){
+          return 0.7;
+        }  
+      }
+      if(relationshipTypesToShow.length==0){
+        return 0.7;
+      }
+    }else if(effectiveYear==effYear){
+      if(effectiveYear==endYear){
+        if(effectiveQuarter>=effQuarter && effectiveQuarter<=endQuarter){
+          for(var i=0;i<relationshipTypesToShow.length;i++){
+            if(objectIsInList(relationshipTypesToShow[i],currentAllianceHasTypes)==1){
+              return 0.7;
+            }
+          }
+          if(showJV==1){
+            if(currentAllianceIsJV=="true"){
+              return 0.7;
+            }
+          }
+          if(showCB==1){
+            if(currentAllianceIsCB=="true"){
+              return 0.7;
+            }  
+          }
+          if(relationshipTypesToShow.length==0){
+            return 0.7;
+          }
+        }
+      }else{
+        if(effectiveQuarter>=effQuarter){
+          for(var i=0;i<relationshipTypesToShow.length;i++){
+            if(objectIsInList(relationshipTypesToShow[i],currentAllianceHasTypes)==1){
+              return 0.7;
+            }
+          }
+          if(showJV==1){
+            if(currentAllianceIsJV=="true"){
+              return 0.7;
+            }
+          }
+          if(showCB==1){
+            if(currentAllianceIsCB=="true"){
+              return 0.7;
+            }  
+          }
+          if(relationshipTypesToShow.length==0){
+            return 0.7;
+          }
+        }
+      }
+    }else{
+      if(effectiveYear<endYear){
+          for(var i=0;i<relationshipTypesToShow.length;i++){
+            if(objectIsInList(relationshipTypesToShow[i],currentAllianceHasTypes)==1){
+              return 0.7;
+            }
+          }
+          if(showJV==1){
+            if(currentAllianceIsJV=="true"){
+              return 0.7;
+            }
+          }
+          if(showCB==1){
+            if(currentAllianceIsCB=="true"){
+              return 0.7;
+            }  
+          }
+          if(relationshipTypesToShow.length==0){
+            return 0.7;
+          }          
+      }else if(effectiveYear==endYear){
+        if(effectiveQuarter<=endQuarter){
+          for(var i=0;i<relationshipTypesToShow.length;i++){
+            if(objectIsInList(relationshipTypesToShow[i],currentAllianceHasTypes)==1){
+              return 0.7;
+            }
+          }
+          if(showJV==1){
+            if(currentAllianceIsJV=="true"){
+              return 0.7;
+            }
+          }
+          if(showCB==1){
+            if(currentAllianceIsCB=="true"){
+              return 0.7;
+            }  
+          }
+          if(relationshipTypesToShow.length==0){
+            return 0.7;
+          }
+        } 
+      }
+    }
+    return 0.1;
+  }
+  });
       
  
   //console.log(totalLinkCount);
@@ -1609,6 +2010,10 @@ function drawDetailedAlliances(company1,company2){
           
   } 
   });
+
+
+
+
   detailedLinks.on("mouseover",function(d){
       d3.select(this).style("stroke-width",3);
       d3.selectAll(".detailedalliance")
@@ -1627,13 +2032,137 @@ function drawDetailedAlliances(company1,company2){
   })
   .on("mouseout",function(){
     d3.selectAll(".detailedalliance")
-        .style("opacity",0.7)
-        .style("stroke-width",1);
-    tip.hide();
+      .style("opacity",function(d){
+          var effectiveDate = d.effective;
+        var effectiveYear,effectiveMonth,effectiveQuarter;
+        if(effectiveDate!=""){
+          effectiveYear = parseInt(effectiveDate.split("/")[2]);
+          effectiveMonth = parseInt(effectiveDate.split("/")[0]);
+          if (effectiveMonth>=1 && effectiveMonth<=3){
+            effectiveQuarter = 1;
+          }else if (effectiveMonth>=4 && effectiveMonth<=6){
+            effectiveQuarter = 2;
+          }else if (effectiveMonth>=7 && effectiveMonth<=9){
+            effectiveQuarter = 3;
+          }else if (effectiveMonth>=10 && effectiveMonth<=12){
+            effectiveQuarter = 4;
+          }
+        }
+        var currentAllianceHasTypes = getTypesInAlliance(company1,company2,effectiveYear,effectiveQuarter);
+        var currentAllianceIsJV = isJointVenture(company1,company2,effectiveYear,effectiveQuarter);
+        var currentAllianceIsCB = isCrossBorderAlliance(company1,company2,effectiveYear,effectiveQuarter);        
+        if(effectiveYear<effYear){
+          //return 0.7;
+          for(var i=0;i<relationshipTypesToShow.length;i++){
+            if(objectIsInList(relationshipTypesToShow[i],currentAllianceHasTypes)==1){
+              return 0.7;
+            }
+          }
+          if(showJV==1){
+            if(currentAllianceIsJV=="true"){
+              return 0.7;
+            }
+          }
+          if(showCB==1){
+            if(currentAllianceIsCB=="true"){
+              return 0.7;
+            }  
+          }
+          if(relationshipTypesToShow.length==0){
+            return 0.7;
+          }
+        }else if(effectiveYear==effYear){
+          if(effectiveYear==endYear){
+            if(effectiveQuarter>=effQuarter && effectiveQuarter<=endQuarter){
+              for(var i=0;i<relationshipTypesToShow.length;i++){
+                if(objectIsInList(relationshipTypesToShow[i],currentAllianceHasTypes)==1){
+                  return 0.7;
+                }
+              }
+              if(showJV==1){
+                if(currentAllianceIsJV=="true"){
+                  return 0.7;
+                }
+              }
+              if(showCB==1){
+                if(currentAllianceIsCB=="true"){
+                  return 0.7;
+                }  
+              }
+              if(relationshipTypesToShow.length==0){
+                return 0.7;
+              }
+            }
+          }else{
+            if(effectiveQuarter>=effQuarter){
+              for(var i=0;i<relationshipTypesToShow.length;i++){
+                if(objectIsInList(relationshipTypesToShow[i],currentAllianceHasTypes)==1){
+                  return 0.7;
+                }
+              }
+              if(showJV==1){
+                if(currentAllianceIsJV=="true"){
+                  return 0.7;
+                }
+              }
+              if(showCB==1){
+                if(currentAllianceIsCB=="true"){
+                  return 0.7;
+                }  
+              }
+              if(relationshipTypesToShow.length==0){
+                return 0.7;
+              }
+            }
+          }
+        }else{
+          if(effectiveYear<endYear){
+              for(var i=0;i<relationshipTypesToShow.length;i++){
+                if(objectIsInList(relationshipTypesToShow[i],currentAllianceHasTypes)==1){
+                  return 0.7;
+                }
+              }
+              if(showJV==1){
+                if(currentAllianceIsJV=="true"){
+                  return 0.7;
+                }
+              }
+              if(showCB==1){
+                if(currentAllianceIsCB=="true"){
+                  return 0.7;
+                }  
+              }
+              if(relationshipTypesToShow.length==0){
+                return 0.7;
+              }
+          }else if(effectiveYear==endYear){
+            if(effectiveQuarter<=endQuarter){
+              for(var i=0;i<relationshipTypesToShow.length;i++){
+                if(objectIsInList(relationshipTypesToShow[i],currentAllianceHasTypes)==1){
+                  return 0.7;
+                }
+              }
+              if(showJV==1){
+                if(currentAllianceIsJV=="true"){
+                  return 0.7;
+                }
+              }
+              if(showCB==1){
+                if(currentAllianceIsCB=="true"){
+                  return 0.7;
+                }  
+              }
+              if(relationshipTypesToShow.length==0){
+                return 0.7;
+              }
+            } 
+          }
+        }
+        return 0.1;
+      })
+      .style("stroke-width",1);
+      tip.hide();
   });
-
-  //detailedLinks.on("mouseover",tip.show);
-  //detailedLinks.on("mouseout",tip.hide);
 
 }
 
@@ -1772,7 +2301,15 @@ var tip = d3.tip()
   .offset([0, 0])
   .html(function(d) {
     return "Effective: <span style='font-family:\"HelveticaNeue-Light\", \"Helvetica Neue Light\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;'>" + d.effective + "</span><br/>Terminated: <span style='font-family:\"HelveticaNeue-Light\", \"Helvetica Neue Light\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;'>" + d.terminated + "</span><br/>Type:<span style='font-family:\"HelveticaNeue-Light\", \"Helvetica Neue Light\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif; '>" + d.type + "</span>";
-  })
+  });
+
+var tip1 = d3.tip()
+  .attr('class', 'd3-tip')
+  .offset([-15,0])
+  .html(function(d) {
+    return "Company: <span style='font-family:\"HelveticaNeue-Light\", \"Helvetica Neue Light\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;'>" + d.companyname + "</span><br/>Sector:<span style='font-family:\"HelveticaNeue-Light\", \"Helvetica Neue Light\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif; '>" + d.sector + "</span>";
+  });
+
 
 function addLinkToPathView2(currentLink,relationshipTypesToShow,showJV,showCB){
       var allTypesInCurrentEdge,flag=0;
@@ -2478,33 +3015,285 @@ function linkIsInFilteredLinks(company1,company2,links){
   }return 0;
 }
 
-
 function drawScatternetView(){
-    filterDataAcrossViews(2);
+  filterDataAcrossViews(2);
     d3.selectAll("svg").remove();
+  
+
+//var color = d3.scale.category10();
+var color = function(sector){
+  if (sector=="Hardware Equipment") {return "#DC3912"; }
+  else if(sector=="Hardware Components") {return "#3366CC";}
+  else if(sector=="Software") {return "#FF9900";}
+  else if(sector=="Telecommunications") {return "#109618";}
+  else if(sector=="Media") {return "#990099";}
+  else {return "#77777E";}
+};
+
+var width = 2200,
+    size = 270,
+    padding = 19.5;
+
+var x;
+var y;
+
+if($("#scatternetscale").val()=="linear"){
+      x=d3.scale.linear();
+      y=d3.scale.linear();
+    }else{
+      x=d3.scale.log();
+      y=d3.scale.log();
+    }
+
+x.range([padding / 2, size - padding / 2]);
+y.range([size - padding / 2, padding / 2]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom")
+    .ticks(5);
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left")
+    .ticks(5);
+
+//var color = d3.scale.category10();
+var color = function(sector){
+  if (sector=="Hardware Equipment") {return "#DC3912"; }
+  else if(sector=="Hardware Components") {return "#3366CC";}
+  else if(sector=="Software") {return "#FF9900";}
+  else if(sector=="Telecommunications") {return "#109618";}
+  else if(sector=="Media") {return "#990099";}
+  else {return "#77777E";}
+};
+
+var myData = [];
+for (var i=0;i<filteredScatterNetNodes.length;i++){
+  curNode = filteredScatterNetNodes[i];
+  //console.log(curNode)
+  myData.push({"totalAllianceCount":curNode.allianceCount,"companysize":curNode['companySize'],"highprice":curNode['highPrice'],"sector":curNode['sector'],"companyname":curNode['name'],"rndAgreementsCount":curNode['rndAgreementsCount'],"oemAgreementsCount":curNode['oemAgreementsCount'],"supplyAgreementsCount":curNode['supplyAgreementsCount'],"strategicAgreementsCount":curNode['strategicAgreementsCount'],"jvCount":curNode['jvCount'],"cbAlliancesCount":curNode['cbAlliancesCount'],"marketingAgreementsCount":curNode['marketingAgreementsCount'],"techtransAgreementsCount":curNode['techtransAgreementsCount'],"licensingAgreementsCount":curNode['licensingAgreementsCount'],"manufacturingAgreementsCount":curNode['manufacturingAgreementsCount']});
+}
+
+//console.log(myData)
+//d3.csv("scatterPlotMatrix_500.csv", function(error, data) {
+
+var trait1 = document.getElementById("matrixAttribute1").value;
+var trait2 = document.getElementById("matrixAttribute2").value;
+var trait3 = document.getElementById("matrixAttribute3").value;
+
+  var domainByTrait = {},
+      traits = d3.keys(myData[0]).filter(function(d) { return ((d==trait1) || (d==trait2) || (d==trait3)); }),
+      n = traits.length;
+
+  var alliancecountArr = [];
+  var companysizeArr = [];
+  var highpriceArr = [];
+  var jvCountArr = [];
+  var cbAlliancesCountArr = [];
+  var rndAgreementsCountArr = [];
+  var strategicAgreementsCountArr = [];
+  var supplyAgreementsCountArr = [];
+  var marketingAgreementsCountArr = [];
+  var manufacturingAgreementsCountArr = [];
+  var techtransAgreementsCountArr = [];
+  var oemAgreementsCountArr = [];
+  var licensingAgreementsCountArr = [];
+
+  //console.log(data.length)
+  for(var i=0;i<myData.length;i++){    
+    alliancecountArr.push(parseInt(myData[i]['totalAllianceCount']));
+    companysizeArr.push(parseInt(myData[i]['companysize']));
+    highpriceArr.push(parseInt(myData[i]['highprice']));
+    jvCountArr.push(parseInt(myData[i]['jvCount']));
+    cbAlliancesCountArr.push(parseInt(myData[i]['cbAlliancesCount']));
+    rndAgreementsCountArr.push(parseInt(myData[i]['rndAgreementsCount']));
+    strategicAgreementsCountArr.push(parseInt(myData[i]['strategicAgreementsCount']));
+    supplyAgreementsCountArr.push(parseInt(myData[i]['supplyAgreementsCount']));
+    marketingAgreementsCountArr.push(parseInt(myData[i]['marketingAgreementsCount']));
+    manufacturingAgreementsCountArr.push(parseInt(myData[i]['manufacturingAgreementsCount']));
+    techtransAgreementsCountArr.push(parseInt(myData[i]['techtransAgreementsCount']));
+    oemAgreementsCountArr.push(parseInt(myData[i]['oemAgreementsCount']));
+    licensingAgreementsCountArr.push(parseInt(myData[i]['licensingAgreementsCount']));
+  }
+
+   traits.forEach(function(trait) {
+    if(trait=="companysize"){
+      domainByTrait[trait]=[d3.min(companysizeArr),d3.max(companysizeArr)];
+    }else if(trait=="totalAllianceCount"){
+      domainByTrait[trait]=[d3.min(alliancecountArr),d3.max(alliancecountArr)];
+    }else if(trait=="highprice"){
+      domainByTrait[trait]=[d3.min(highpriceArr),d3.max(highpriceArr)];
+    }else if(trait=="jvCount"){
+      domainByTrait[trait]=[d3.min(jvCountArr),d3.max(jvCountArr)];
+    }else if(trait=="cbAlliancesCount"){
+      domainByTrait[trait]=[d3.min(cbAlliancesCountArr),d3.max(cbAlliancesCountArr)];
+    }else if(trait=="rndAgreementsCount"){
+      domainByTrait[trait]=[d3.min(rndAgreementsCountArr),d3.max(rndAgreementsCountArr)];
+    }else if(trait=="strategicAgreementsCount"){
+      domainByTrait[trait]=[d3.min(strategicAgreementsCountArr),d3.max(strategicAgreementsCountArr)];
+    }else if(trait=="supplyAgreementsCount"){
+      domainByTrait[trait]=[d3.min(supplyAgreementsCountArr),d3.max(supplyAgreementsCountArr)];
+    }else if(trait=="marketingAgreementsCount"){
+      domainByTrait[trait]=[d3.min(marketingAgreementsCountArr),d3.max(marketingAgreementsCountArr)];
+    }else if(trait=="manufacturingAgreementsCount"){
+      domainByTrait[trait]=[d3.min(manufacturingAgreementsCountArr),d3.max(manufacturingAgreementsCountArr)];
+    }else if(trait=="techtransAgreementsCount"){
+      domainByTrait[trait]=[d3.min(techtransAgreementsCountArr),d3.max(techtransAgreementsCountArr)];
+    }else if(trait=="oemAgreementsCount"){
+      domainByTrait[trait]=[d3.min(oemAgreementsCountArr),d3.max(oemAgreementsCountArr)];
+    }else if(trait=="licensingAgreementsCount"){
+      domainByTrait[trait]=[d3.min(licensingAgreementsCountArr),d3.max(licensingAgreementsCountArr)];
+    }
+  });
+
+  xAxis.tickSize(size * n);
+  yAxis.tickSize(-size * n);
+
+  var svg = d3.select("#viz").append("svg")
+      .attr("width", (size * n + padding+100))
+      .attr("height", size * n + padding + 50)
+    .append("g")
+      .attr("transform", "translate(" + (padding+30) + "," + padding / 2 + ")");
+
+  svg.selectAll(".x.axis")
+      .data(traits)
+    .enter().append("g")
+      .attr("class", "x axis")
+      .attr("transform", function(d, i) { return "translate(" + (n - i - 1) * size + ",0)"; })
+      .each(function(d) { x.domain(domainByTrait[d]); d3.select(this).call(xAxis); });
+
+  svg.selectAll(".y.axis")
+      .data(traits)
+    .enter().append("g")
+      .attr("class", "y axis")
+      .attr("transform", function(d, i) { return "translate(0," + i * size + ")"; })
+      .each(function(d) { y.domain(domainByTrait[d]); d3.select(this).call(yAxis); });
+
+      svg.call(tip1);
+
+  var cell = svg.selectAll(".cell")
+      .data(cross(traits, traits))
+    .enter().append("g")
+      .attr("class", "cell")
+      .attr("transform", function(d) { return "translate(" + (n - d.i - 1) * size + "," + d.j * size + ")"; })
+      .each(plot);
+
+      d3.selectAll(".cell").on("click",function(d){        
+        drawScatternetViewOnModal(d.x,d.y);
+        //console.log(d.i,d.j)
+        //$('#myModal').modal('show');
+        document.getElementById("modal-body").showModal(); 
+      });
+
+  // Titles for the diagonal.
+  cell.filter(function(d) { return d.i === d.j; }).append("text")
+      .attr("x", padding)
+      .attr("y", padding)
+      .attr("dy", ".71em")
+      .text(function(d) { return d.x; });
+
+  function plot(p) {
+    var cell = d3.select(this);
+
+    x.domain(domainByTrait[p.x]);
+    y.domain(domainByTrait[p.y]);
+
+    cell.append("rect")
+        .attr("class", "frame")
+        .attr("x", padding / 2)
+        .attr("y", padding / 2)
+        .attr("width", size - padding)
+        .attr("height", size - padding);
+
+    cell.selectAll("circle")
+        .data(myData)
+      .enter().append("circle")
+        .attr("class","datapoint")
+        .attr("cx", function(d) { return x(d[p.x]); })
+        .attr("cy", function(d) { return y(d[p.y]); })
+        .attr("r", 3)
+        .style("fill", function(d) { return color(d.sector); });
+
+    d3.selectAll(".datapoint").on("mouseover",function(d){
+        //console.log(d.companyname,d.sector,d.highprice,d.companysize,d.alliancecount);
+        tip1.show(d);
+        /*d3.select(this)
+          .append("title")
+          .text(function(){
+            return d.companyname+","+d.sector;
+          });*/
+        
+        d3.selectAll(".datapoint")
+          .style("fill",function(i){
+            if(i==d){              
+              return color(d.sector);
+            }else{
+              return "#ccc";
+            }
+          })
+          .style("opacity",function(i){
+            if(i==d){
+              return 0.9;
+            }else{
+              return 0.1;
+            }
+          }); 
+
+                
+      })
+      .on("mouseout",function(){
+        d3.selectAll(".datapoint").style("fill",function(d){
+          return color(d.sector);
+        })
+        .style("opacity",0.9);
+        tip1.hide();
+
+      });
+
+
+
+  }
+
+  function cross(a, b) {
+    var c = [], n = a.length, m = b.length, i, j;
+    for (i = -1; ++i < n;) for (j = -1; ++j < m;) c.push({x: a[i], i: i, y: b[j], j: j});
+    return c;
+  }
+
+
+}
+
+
+function drawScatternetViewOnModal(xAxisLabel,yAxisLabel){
+    //filterDataAcrossViews(2);
+    d3.select("#modal-body").selectAll("svg").remove();
     //d3.selectAll(".tooltip").remove();
     d3.select("#viz").on("dblclick",""); // added because of the double click to expand function of the detailed links view feature
     
-    /*
-    var tooltip = d3.select("body").append("div")
-    .attr("class", "tooltip")
-    .style("opacity", 0);
-    */
-
+  
     var margins = {
-            "left": 60,
+            "left": 70,
             "right": 30,
             "top": 30,
-            "bottom": 30
+            "bottom": 40
     };
 
-    var xAxisVal=document.getElementById("xaxis").value;
-    var yAxisVal=document.getElementById("yaxis").value;
-
-    var width = document.getElementById("viz").offsetWidth;
-    var height = document.getElementById("viz").offsetHeight;
+//    var xAxisVal=document.getElementById("xaxis").value;
+//    var yAxisVal=document.getElementById("yaxis").value;
+ var xAxisVal = xAxisLabel,yAxisVal= yAxisLabel;
+  if(xAxisVal=="totalAllianceCount"){
+    xAxisVal = "allianceCount";
+  }
+  if(yAxisVal=="totalAllianceCount"){
+    yAxisVal = "allianceCount";
+  }
+    //var width = document.getElementById("modal-body").offsetWidth;
+    //var height = document.getElementById("modal-body").offsetHeight;
+    var width=document.getElementById("viz").offsetWidth*0.94;
+    var height=document.getElementById("viz").offsetHeight*0.90;
     
-    var svg = d3.select("#viz").append("svg").attr("width", "100%").attr("height", height).append("g")
+    var svg = d3.select("#modal-body").append("svg").attr("width", "100%").attr("height", height).append("g")
         .attr("transform", "translate(" + margins.left + "," + margins.top + ")");
 
     var x,y; 
@@ -2518,38 +3307,92 @@ function drawScatternetView(){
      
     
         x.domain(d3.extent(filteredScatterNetNodes, function (d) {
-        if(document.getElementById("xaxis").value=="allianceCount"){
-                return d.allianceCount;
-        }else if(document.getElementById("xaxis").value=="highPrice"){
-                return d.highPrice;
-        }else if(document.getElementById("xaxis").value=="companySize"){
-                return d.companySize;
-        }
-      }))
+            if(xAxisVal=="allianceCount"){
+                    return d.allianceCount;
+            }else if(xAxisVal=="highPrice"){
+                    return d.highPrice;
+            }else if(xAxisVal=="companySize"){
+                    return d.companySize;
+            }else if(xAxisVal=="jvCount"){
+                    return d.jvCount;
+            }else if(xAxisVal=="cbAlliancesCount"){
+                    return d.cbAlliancesCount;
+            }else if(xAxisVal=="rndAgreementsCount"){
+                    return d.rndAgreementsCount;
+            }else if(xAxisVal=="strategicAgreementsCount"){
+                    return d.strategicAgreementsCount;
+            }else if(xAxisVal=="supplyAgreementsCount"){
+                    return d.supplyAgreementsCount;
+            }else if(xAxisVal=="marketingAgreementsCount"){
+                    return d.marketingAgreementsCount;
+            }else if(xAxisVal=="manufacturingAgreementsCount"){
+                    return d.manufacturingAgreementsCount;
+            }else if(xAxisVal=="techtransAgreementsCount"){
+                    return d.techtransAgreementsCount;
+            }else if(xAxisVal=="oemAgreementsCount"){
+                    return d.oemAgreementsCount;
+            }else if(xAxisVal=="licensingAgreementsCount"){
+                    return d.licensingAgreementsCount;
+            }
+        }))
         .range([0, width - margins.left - margins.right]);// the range maps the domain to values from 0 to the width minus the left and right margins (used to space out the visualization)
 
     // this does the same as for the y axis but maps from the allianceCount variable to the height to 0. 
     
         y.domain(d3.extent(filteredScatterNetNodes, function (d) {
-        if(document.getElementById("yaxis").value=="allianceCount"){
-                return d.allianceCount;
-        }else if(document.getElementById("yaxis").value=="highPrice"){
-                return d.highPrice;
-        }else if(document.getElementById("yaxis").value=="companySize"){
-                return d.companySize;
-        }
-    }))
-    .range([height - margins.top - margins.bottom, 0]);// Note that height goes first due to the SVG coordinate system
+            if(yAxisVal=="allianceCount"){
+                    return d.allianceCount;
+            }else if(yAxisVal=="highPrice"){
+                    return d.highPrice;
+            }else if(yAxisVal=="companySize"){
+                    return d.companySize;
+            }else if(yAxisVal=="jvCount"){
+                    return d.jvCount;
+            }else if(yAxisVal=="cbAlliancesCount"){
+                    return d.cbAlliancesCount;
+            }else if(yAxisVal=="rndAgreementsCount"){
+                    return d.rndAgreementsCount;
+            }else if(yAxisVal=="strategicAgreementsCount"){
+                    return d.strategicAgreementsCount;
+            }else if(yAxisVal=="supplyAgreementsCount"){
+                    return d.supplyAgreementsCount;
+            }else if(yAxisVal=="marketingAgreementsCount"){
+                    return d.marketingAgreementsCount;
+            }else if(yAxisVal=="manufacturingAgreementsCount"){
+                    return d.manufacturingAgreementsCount;
+            }else if(yAxisVal=="techtransAgreementsCount"){
+                    return d.techtransAgreementsCount;
+            }else if(yAxisVal=="oemAgreementsCount"){
+                    return d.oemAgreementsCount;
+            }else if(yAxisVal=="licensingAgreementsCount"){
+                    return d.licensingAgreementsCount;
+            }
+        }))
+        .range([height - margins.top - margins.bottom, 0]);// Note that height goes first due to the SVG coordinate system
 
 
     //console.log(y.range()[1]);
     //console.log(x.range()[0]);
     
     // we add the axes SVG component. At this point, this is just a placeholder. The actual axis will be added in a bit
-    svg.append("g").attr("class", "scatternet_x_axis").attr("transform", "translate(0," + y.range()[0] + ")");
-    svg.append("g").attr("class", "scatternet_y_axis");
+    svg.append("g").attr("class", "scatternet_x_axis").attr("transform", "translate(0," + y.range()[0] + ")").append("text")
+      .attr("x", width)
+      .attr("dy", 30)
+      .style("text-anchor", "end")
+      .style("font-size","10px")
+      .style("fill","black")
+      .text(xAxisVal);
 
-    /*d3.select("#viz").call(d3.behavior.zoom().x(x).y(y).scaleExtent([1, 8]).on("zoom", scatternetZoom));*/
+    svg.append("g").attr("class", "scatternet_y_axis").append("text")
+      .attr("x", 20)
+      .attr("y", -20)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .style("font-size","10px")
+      .style("fill","black")
+      .text(yAxisVal);
+
+    //d3.select("#viz").call(d3.behavior.zoom().x(x).y(y).scaleExtent([1, 8]).on("zoom", scatternetZoom));
     // this is the actual definition of our x and y axes. The orientation refers to where the labels appear - for the x axis, below or above the line, and for the y axis, left or right of the line. Tick padding refers to how much space between the tick and the label. There are other parameters too - see https://github.com/mbostock/d3/wiki/SVG-Axes for more information
     var xAxis = d3.svg.axis().scale(x).orient("bottom").tickPadding(2).innerTickSize(-y.range()[0])
     .outerTickSize(0);
@@ -2684,19 +3527,60 @@ function drawScatternetView(){
             .text(function (i) {
                   if(i.name==d.name || getPartners(d.name).indexOf(i.name) > -1){
                     var xVal,yVal;
-                    if(document.getElementById("xaxis").value=="allianceCount"){
-                             xVal = i.allianceCount;
-                    }else if(document.getElementById("xaxis").value=="highPrice"){
-                             xVal = i.highPrice;
-                    }else if(document.getElementById("xaxis").value=="companySize"){
-                             xVal = i.companySize;
+                    if(xAxisVal=="allianceCount"){
+                            xVal = i.allianceCount;
+                    }else if(xAxisVal=="highPrice"){
+                            xVal = i.highPrice;
+                    }else if(xAxisVal=="companySize"){
+                            xVal = i.companySize;
+                    }else if(xAxisVal=="jvCount"){
+                            xVal = i.jvCount;
+                    }else if(xAxisVal=="cbAlliancesCount"){
+                            xVal = i.cbAlliancesCount;
+                    }else if(xAxisVal=="rndAgreementsCount"){
+                            xVal = i.rndAgreementsCount;
+                    }else if(xAxisVal=="strategicAgreementsCount"){
+                            xVal = i.strategicAgreementsCount;
+                    }else if(xAxisVal=="supplyAgreementsCount"){
+                            xVal = i.supplyAgreementsCount;
+                    }else if(xAxisVal=="marketingAgreementsCount"){
+                            xVal = i.marketingAgreementsCount;
+                    }else if(xAxisVal=="manufacturingAgreementsCount"){
+                            xVal = i.manufacturingAgreementsCount;
+                    }else if(xAxisVal=="techtransAgreementsCount"){
+                            xVal = i.techtransAgreementsCount;
+                    }else if(xAxisVal=="oemAgreementsCount"){
+                            xVal = i.oemAgreementsCount;
+                    }else if(xAxisVal=="licensingAgreementsCount"){
+                            xVal = i.licensingAgreementsCount;
                     }
-                    if(document.getElementById("yaxis").value=="allianceCount"){
-                             yVal = i.allianceCount;
-                    }else if(document.getElementById("yaxis").value=="highPrice"){
-                             yVal = i.highPrice;
-                    }else if(document.getElementById("yaxis").value=="companySize"){
-                             yVal = i.companySize;
+                    
+                    if(yAxisVal=="allianceCount"){
+                            yVal = i.allianceCount;
+                    }else if(yAxisVal=="highPrice"){
+                            yVal = i.highPrice;
+                    }else if(yAxisVal=="companySize"){
+                            yVal = i.companySize;
+                    }else if(yAxisVal=="jvCount"){
+                            yVal = i.jvCount;
+                    }else if(yAxisVal=="cbAlliancesCount"){
+                            yVal = i.cbAlliancesCount;
+                    }else if(yAxisVal=="rndAgreementsCount"){
+                            yVal = i.rndAgreementsCount;
+                    }else if(yAxisVal=="strategicAgreementsCount"){
+                            yVal = i.strategicAgreementsCount;
+                    }else if(yAxisVal=="supplyAgreementsCount"){
+                            yVal = i.supplyAgreementsCount;
+                    }else if(yAxisVal=="marketingAgreementsCount"){
+                            yVal = i.marketingAgreementsCount;
+                    }else if(yAxisVal=="manufacturingAgreementsCount"){
+                            yVal = i.manufacturingAgreementsCount;
+                    }else if(yAxisVal=="techtransAgreementsCount"){
+                            yVal = i.techtransAgreementsCount;
+                    }else if(yAxisVal=="oemAgreementsCount"){
+                            yVal = i.oemAgreementsCount;
+                    }else if(yAxisVal=="licensingAgreementsCount"){
+                            yVal = i.licensingAgreementsCount;
                     }
                     
                     if(getPartners(d.name).indexOf(i.name) > -1){
@@ -2730,21 +3614,61 @@ function drawScatternetView(){
             .text(function (i) {
                 if(i.name==d.name || getPartners(d.name).indexOf(i.name) > -1){
                     var xVal,yVal;
-                    if(document.getElementById("xaxis").value=="allianceCount"){
-                             xVal = i.allianceCount;
-                    }else if(document.getElementById("xaxis").value=="highPrice"){
-                             xVal = i.highPrice;
-                    }else if(document.getElementById("xaxis").value=="companySize"){
-                             xVal = i.companySize;
+                    if(xAxisVal=="allianceCount"){
+                            xVal = i.allianceCount;
+                    }else if(xAxisVal=="highPrice"){
+                            xVal = i.highPrice;
+                    }else if(xAxisVal=="companySize"){
+                            xVal = i.companySize;
+                    }else if(xAxisVal=="jvCount"){
+                            xVal = i.jvCount;
+                    }else if(xAxisVal=="cbAlliancesCount"){
+                            xVal = i.cbAlliancesCount;
+                    }else if(xAxisVal=="rndAgreementsCount"){
+                            xVal = i.rndAgreementsCount;
+                    }else if(xAxisVal=="strategicAgreementsCount"){
+                            xVal = i.strategicAgreementsCount;
+                    }else if(xAxisVal=="supplyAgreementsCount"){
+                            xVal = i.supplyAgreementsCount;
+                    }else if(xAxisVal=="marketingAgreementsCount"){
+                            xVal = i.marketingAgreementsCount;
+                    }else if(xAxisVal=="manufacturingAgreementsCount"){
+                            xVal = i.manufacturingAgreementsCount;
+                    }else if(xAxisVal=="techtransAgreementsCount"){
+                            xVal = i.techtransAgreementsCount;
+                    }else if(xAxisVal=="oemAgreementsCount"){
+                            xVal = i.oemAgreementsCount;
+                    }else if(xAxisVal=="licensingAgreementsCount"){
+                            xVal = i.licensingAgreementsCount;
                     }
-                    if(document.getElementById("yaxis").value=="allianceCount"){
-                             yVal = i.allianceCount;
-                    }else if(document.getElementById("yaxis").value=="highPrice"){
-                             yVal = i.highPrice;
-                    }else if(document.getElementById("yaxis").value=="companySize"){
-                             yVal = i.companySize;
+                    
+                    if(yAxisVal=="allianceCount"){
+                            yVal = i.allianceCount;
+                    }else if(yAxisVal=="highPrice"){
+                            yVal = i.highPrice;
+                    }else if(yAxisVal=="companySize"){
+                            yVal = i.companySize;
+                    }else if(yAxisVal=="jvCount"){
+                            yVal = i.jvCount;
+                    }else if(yAxisVal=="cbAlliancesCount"){
+                            yVal = i.cbAlliancesCount;
+                    }else if(yAxisVal=="rndAgreementsCount"){
+                            yVal = i.rndAgreementsCount;
+                    }else if(yAxisVal=="strategicAgreementsCount"){
+                            yVal = i.strategicAgreementsCount;
+                    }else if(yAxisVal=="supplyAgreementsCount"){
+                            yVal = i.supplyAgreementsCount;
+                    }else if(yAxisVal=="marketingAgreementsCount"){
+                            yVal = i.marketingAgreementsCount;
+                    }else if(yAxisVal=="manufacturingAgreementsCount"){
+                            yVal = i.manufacturingAgreementsCount;
+                    }else if(yAxisVal=="techtransAgreementsCount"){
+                            yVal = i.techtransAgreementsCount;
+                    }else if(yAxisVal=="oemAgreementsCount"){
+                            yVal = i.oemAgreementsCount;
+                    }else if(yAxisVal=="licensingAgreementsCount"){
+                            yVal = i.licensingAgreementsCount;
                     }
-                    //return "("+xVal+","+yVal+")";
 
                     if(getPartners(d.name).indexOf(i.name) > -1){
                     if(linkIsInFilteredLinks(i.name,d.name,filteredScatterNetLinks)==1){
@@ -2898,18 +3822,7 @@ function drawScatternetView(){
 
     });
 
-/*
-    nodeGroup.append("circle")
-        .attr("r", "4")//function(d){return d.allianceCount/2;})
-        .attr("class", "scatternetdot")
-        .attr("fill",function(d){
-            if(d.expanded=="true"){
-                return "#000000";
-            }else{
-                return "#77777E";
-            }
-        })
-*/
+
 if($('#shaping').val()=="bytype"){
     
     nodeGroup.each(function(d){
@@ -2934,12 +3847,6 @@ if($('#shaping').val()=="bytype"){
               return isExpanded(d.name)==1? "#000000" : "#77777E";
         }
         });
-        /*
-        .append("title") // THIS IS THE PROPERTY WHICH adds the TOOLTIP 
-               .text(function(d){
-                    return " "+document.getElementById("xaxis").value+": " +d[document.getElementById("xaxis").value] + "," + " "+document.getElementById("yaxis").value+": " +d[document.getElementById("yaxis").value];
-               });
-        */    
       }else{
         d3.select(this).append("rect")
         .attr("width",function(d){
@@ -3021,8 +3928,8 @@ if($('#shaping').val()=="bytype"){
   d3.selectAll(".tick").select("line")
     .style("opacity",0.15);
 
-}
 
+}
 
 //-----------------------------------
 //----------SEGMENT VIEW-------------
